@@ -1,0 +1,254 @@
+{
+  "Output": {
+    "prefix": "out",
+    "body": "{{ ${1:value} }}",
+    "description": "Print an expression, HTML-escaped."
+  },
+  "if": {
+    "prefix": "if",
+    "body": [
+      "{% if ${1:condition} %}",
+      "\t$0",
+      "{% endif %}"
+    ],
+    "description": "Render when a condition is true."
+  },
+  "if else": {
+    "prefix": "ifelse",
+    "body": [
+      "{% if ${1:condition} %}",
+      "\t$2",
+      "{% else %}",
+      "\t$0",
+      "{% endif %}"
+    ],
+    "description": "Render one of two branches."
+  },
+  "elsif": {
+    "prefix": "elsif",
+    "body": "{% elsif ${1:condition} %}",
+    "description": "Another condition inside if."
+  },
+  "else": {
+    "prefix": "else",
+    "body": "{% else %}",
+    "description": "The fallback branch of if, unless, case or for."
+  },
+  "unless": {
+    "prefix": "unless",
+    "body": [
+      "{% unless ${1:condition} %}",
+      "\t$0",
+      "{% endunless %}"
+    ],
+    "description": "Render when a condition is false."
+  },
+  "case": {
+    "prefix": "case",
+    "body": [
+      "{% case ${1:value} %}",
+      "\t{% when ${2:\"a\"} %}",
+      "\t\t$3",
+      "\t{% else %}",
+      "\t\t$0",
+      "{% endcase %}"
+    ],
+    "description": "Choose a branch by value."
+  },
+  "when": {
+    "prefix": "when",
+    "body": "{% when ${1:\"value\"} %}",
+    "description": "A branch of case."
+  },
+  "for": {
+    "prefix": "for",
+    "body": [
+      "{% for ${1:item} in ${2:items} %}",
+      "\t$0",
+      "{% endfor %}"
+    ],
+    "description": "Repeat for each item."
+  },
+  "for else": {
+    "prefix": "forelse",
+    "body": [
+      "{% for ${1:item} in ${2:items} %}",
+      "\t$3",
+      "{% else %}",
+      "\t$0",
+      "{% endfor %}"
+    ],
+    "description": "Repeat for each item, with a branch for an empty list."
+  },
+  "for range": {
+    "prefix": "forrange",
+    "body": [
+      "{% for ${1:n} in (${2:1}..${3:3}) %}",
+      "\t$0",
+      "{% endfor %}"
+    ],
+    "description": "Repeat over a range of numbers."
+  },
+  "break": {
+    "prefix": "break",
+    "body": "{% break %}",
+    "description": "Leave the current for loop."
+  },
+  "continue": {
+    "prefix": "continue",
+    "body": "{% continue %}",
+    "description": "Skip to the next iteration."
+  },
+  "cycle": {
+    "prefix": "cycle",
+    "body": "{% cycle ${1:\"odd\"}, ${2:\"even\"} %}",
+    "description": "Print the next value in turn on each iteration."
+  },
+  "assign": {
+    "prefix": "assign",
+    "body": "{% assign ${1:name} = ${2:value} %}",
+    "description": "Set a variable."
+  },
+  "capture": {
+    "prefix": "capture",
+    "body": [
+      "{% capture ${1:name} %}",
+      "\t$0",
+      "{% endcapture %}"
+    ],
+    "description": "Set a variable to rendered text."
+  },
+  "render": {
+    "prefix": "render",
+    "body": "{% render \"${1:name}\"${2:, ${3:key}: ${4:value}} %}",
+    "description": "Render another template with its own variables."
+  },
+  "form": {
+    "prefix": "form",
+    "body": [
+      "{% form '${1|cart_add,cart_update,cart_remove,buy_now,login,logout,register,contact_submit,newsletter_subscribe,wishlist_toggle,review_submit,localization_set|}' %}",
+      "\t$0",
+      "{% endform %}"
+    ],
+    "description": "A hosted form. The kind names the platform action it submits to."
+  },
+  "blocks": {
+    "prefix": "blocks",
+    "body": "{% blocks %}",
+    "description": "Render the section's theme and app blocks in the merchant's order."
+  },
+  "Comment": {
+    "prefix": "comment",
+    "body": "{# ${1:comment} #}",
+    "description": "A comment, removed from the output."
+  },
+  "Comment block": {
+    "prefix": "commentblock",
+    "body": [
+      "{% comment %}",
+      "\t$0",
+      "{% endcomment %}"
+    ],
+    "description": "Ignore everything up to endcomment, including tags."
+  },
+  "Translation": {
+    "prefix": "t",
+    "body": "{{ \"${1:key}\" | t }}",
+    "description": "Print the theme's text for a key in the shopper's language."
+  },
+  "Image": {
+    "prefix": "img",
+    "body": "<img src=\"{{ ${1:image} | image_url: width: ${2:800} }}\" srcset=\"{{ ${1:image} | image_srcset }}\" sizes=\"${3:100vw}\" {{ ${1:image} | image_loading }} alt=\"{{ ${1:image}.alt_text }}\">",
+    "description": "A responsive store image."
+  },
+  "Section blocks loop": {
+    "prefix": "forblocks",
+    "body": [
+      "{% for b in settings.blocks %}",
+      "\t{% unless b.disabled %}",
+      "\t\t{{ b._editor_block_open }}",
+      "\t\t$0",
+      "\t\t{{ b._editor_block_close }}",
+      "\t{% endunless %}",
+      "{% endfor %}"
+    ],
+    "description": "Render a section's local blocks so each is selectable in the theme editor."
+  },
+  "Schema": {
+    "prefix": "schema",
+    "body": [
+      "{% schema %}",
+      "{",
+      "\t\"name\": \"${1:${TM_FILENAME_BASE}}\",",
+      "\t\"settings\": [",
+      "\t\t$0",
+      "\t]",
+      "}",
+      "{% endschema %}"
+    ],
+    "description": "The section's schema block."
+  },
+  "Section": {
+    "prefix": "section",
+    "body": [
+      "<section class=\"${1:${TM_FILENAME_BASE}}\">",
+      "\t<h2>{{ settings.heading }}</h2>",
+      "\t{% for b in settings.blocks %}",
+      "\t\t{% unless b.disabled %}",
+      "\t\t\t{{ b._editor_block_open }}",
+      "\t\t\t<p>{{ b.settings.text }}</p>",
+      "\t\t\t{{ b._editor_block_close }}",
+      "\t\t{% endunless %}",
+      "\t{% endfor %}",
+      "</section>",
+      "{% schema %}",
+      "{",
+      "\t\"name\": \"${1:${TM_FILENAME_BASE}}\",",
+      "\t\"ctx_needs\": [${2:\"shop\"}],",
+      "\t\"settings\": [",
+      "\t\t{ \"id\": \"heading\", \"type\": \"text\", \"default\": \"${3:Heading}\",",
+      "\t\t  \"editor\": { \"label\": \"Heading\", \"group\": \"content\" } }",
+      "\t],",
+      "\t\"blocks\": {",
+      "\t\t\"max\": ${4:6},",
+      "\t\t\"default\": [\"item\"],",
+      "\t\t\"types\": [",
+      "\t\t\t{ \"type\": \"item\",",
+      "\t\t\t  \"editor\": { \"label\": \"Item\" },",
+      "\t\t\t  \"settings\": [",
+      "\t\t\t\t{ \"id\": \"text\", \"type\": \"textarea\", \"default\": \"Text\",",
+      "\t\t\t\t  \"editor\": { \"label\": \"Text\", \"group\": \"content\" } }",
+      "\t\t\t  ] }",
+      "\t\t]",
+      "\t},",
+      "\t\"presets\": [",
+      "\t\t{ \"name\": \"${5:Default}\" }",
+      "\t]",
+      "}",
+      "{% endschema %}"
+    ],
+    "description": "A complete section: markup, settings, local blocks and a preset."
+  },
+  "Theme block": {
+    "prefix": "themeblock",
+    "body": [
+      "<div class=\"${1:${TM_FILENAME_BASE}}\">{{ settings.${2:text} }}</div>",
+      "{% schema %}",
+      "{",
+      "\t\"name\": \"${1:${TM_FILENAME_BASE}}\",",
+      "\t\"kind\": \"block\",",
+      "\t\"settings\": [",
+      "\t\t{ \"id\": \"${2:text}\", \"type\": \"text\", \"default\": \"${3:Text}\",",
+      "\t\t  \"editor\": { \"label\": \"Text\", \"group\": \"content\" } }",
+      "\t]",
+      "}",
+      "{% endschema %}"
+    ],
+    "description": "A theme block file for blocks/<name>.vasc."
+  },
+  "Setting": {
+    "prefix": "setting",
+    "body": "{ \"id\": \"${1:id}\", \"type\": \"${2|text,textarea,richtext,number,range,checkbox,select,color,color_scheme,image,video,url,object,vascula,menu,product,collection,category,vendor,brand,page,blog_post,blog_category,policy,product_list,collection_list|}\", \"default\": ${3:\"\"}, \"editor\": { \"label\": \"${4:Label}\", \"group\": \"${5:content}\" } }",
+    "description": "A section setting."
+  }
+}

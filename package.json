@@ -1,0 +1,164 @@
+{
+  "name": "vscode-vascula",
+  "displayName": "Vascula for Tringify Themes",
+  "description": "Syntax highlighting, snippets, filter docs and theme-file validation for Vascula templates and Tringify themes.",
+  "version": "0.1.0",
+  "publisher": "tringify",
+  "license": "MIT",
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#111111",
+    "theme": "dark"
+  },
+  "homepage": "https://github.com/tringify/vscode-vascula#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tringify/vscode-vascula.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tringify/vscode-vascula/issues"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Linters"
+  ],
+  "keywords": [
+    "vascula",
+    "vasc",
+    "tringify",
+    "theme",
+    "template"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "languages": [
+      {
+        "id": "vascula",
+        "aliases": [
+          "Vascula",
+          "vasc"
+        ],
+        "extensions": [
+          ".vasc"
+        ],
+        "configuration": "./language-configuration.json",
+        "filenamePatterns": [
+          "**/src/sections/*/body.html"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "vascula",
+        "scopeName": "text.html.vascula",
+        "path": "./syntaxes/vascula.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.json": "json",
+          "source.css": "css",
+          "source.js": "javascript",
+          "meta.embedded.block.schema.vascula": "json"
+        }
+      }
+    ],
+    "snippets": [
+      {
+        "language": "vascula",
+        "path": "./snippets/vascula.code-snippets"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": [
+          "theme.json"
+        ],
+        "url": "./schemas/theme.schema.json"
+      },
+      {
+        "fileMatch": [
+          "templates/*.json"
+        ],
+        "url": "./schemas/template.schema.json"
+      },
+      {
+        "fileMatch": [
+          "config/settings_schema.json"
+        ],
+        "url": "./schemas/settings-schema.schema.json"
+      },
+      {
+        "fileMatch": [
+          "config/presets/*.json"
+        ],
+        "url": "./schemas/preset.schema.json"
+      },
+      {
+        "fileMatch": [
+          "config/metafields.json"
+        ],
+        "url": "./schemas/metafields.schema.json"
+      },
+      {
+        "fileMatch": [
+          "src/sections/*/schema.json"
+        ],
+        "url": "./schemas/section.schema.json"
+      }
+    ],
+    "configuration": {
+      "title": "Vascula",
+      "properties": {
+        "vascula.validateSectionSchema": {
+          "type": "boolean",
+          "default": true,
+          "description": "Validate the {% schema %} block of .vasc files against the Tringify section schema."
+        },
+        "vascula.schemaHints": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show warnings for schema keys and rules that the documentation describes but uploads do not reject, such as unknown keys and duplicate setting ids."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "[vascula]": {
+        "editor.quickSuggestions": {
+          "strings": "on"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "generate": "node scripts/generate.mjs",
+    "check-generated": "node scripts/generate.mjs --check",
+    "build": "esbuild src/extension.ts --bundle --platform=node --main-fields=module,main --format=cjs --target=node18 --external:vscode --outfile=dist/extension.js --minify --sourcemap=external",
+    "build:core": "esbuild src/core.ts --bundle --platform=node --main-fields=module,main --format=cjs --target=node18 --outfile=out/core.js",
+    "typecheck": "tsc --noEmit",
+    "fetch-starter": "node test/fetch-starter.mjs",
+    "test:grammar": "vscode-tmgrammar-test -g test/fixtures/grammars/json.tmLanguage.json -g test/fixtures/grammars/css.tmLanguage.json -g test/fixtures/grammars/javascript.tmLanguage.json -g test/fixtures/grammars/html.tmLanguage.json -g test/fixtures/grammars/html-derivative.tmLanguage.json -g syntaxes/vascula.tmLanguage.json \"test/grammar/*.vasc\"",
+    "test:unit": "npm run build:core && node --test test/unit/*.test.mjs",
+    "test:e2e": "node test/e2e/run.mjs",
+    "test": "npm run check-generated && npm run typecheck && npm run test:grammar && npm run test:unit",
+    "package": "vsce package --no-dependencies --out dist/",
+    "vscode:prepublish": "npm run build"
+  },
+  "dependencies": {
+    "vscode-json-languageservice": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "~1.85.0",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.0",
+    "ovsx": "^0.10.1",
+    "typescript": "^5.6.3",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.1.0",
+    "vscode-tmgrammar-test": "^0.1.3"
+  }
+}

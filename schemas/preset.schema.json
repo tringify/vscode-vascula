@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/tringify/vscode-vascula/schemas/preset.schema.json",
+  "title": "Tringify theme preset",
+  "markdownDescription": "A named set of whole-theme setting values. Every value must pass `config/settings_schema.json`.\n\n[Documentation](https://dev-docs.tringify.com/themes/theme-package-structure#optional-capabilities)",
+  "type": "object",
+  "required": [
+    "name",
+    "settings"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The preset's name."
+    },
+    "settings": {
+      "type": "object",
+      "description": "Values for the global settings, by setting id."
+    }
+  }
+}

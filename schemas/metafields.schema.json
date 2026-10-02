@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/tringify/vscode-vascula/schemas/metafields.schema.json",
+  "title": "Tringify theme metafield definitions",
+  "markdownDescription": "The metafield definitions the theme needs, `config/metafields.json`.\n\n[Documentation](https://dev-docs.tringify.com/themes/metafields)",
+  "type": "array",
+  "maxItems": 40,
+  "items": {
+    "type": "object",
+    "required": [
+      "owner_type",
+      "namespace",
+      "key",
+      "type",
+      "name"
+    ],
+    "properties": {
+      "owner_type": {
+        "enum": [
+          "product",
+          "variant",
+          "collection",
+          "category",
+          "page",
+          "blog_post",
+          "blog_category",
+          "vendor",
+          "brand",
+          "store"
+        ],
+        "description": "What the field belongs to."
+      },
+      "namespace": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64,
+        "description": "Read as <owner>.metafields.<namespace>.<key>."
+      },
+      "key": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "type": {
+        "enum": [
+          "string",
+          "url",
+          "date",
+          "datetime",
+          "integer",
+          "decimal",
+          "boolean",
+          "json",
+          "list.string",
+          "list.url",
+          "single_select",
+          "list.single_select",
+          "file_reference",
+          "list.file_reference",
+          "product_reference",
+          "list.product_reference",
+          "variant_reference",
+          "list.variant_reference"
+        ],
+        "markdownDescription": "The field type.\n\n[Documentation](https://dev-docs.tringify.com/ctx/metafields)"
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "description": "The name merchants see."
+      },
+      "description": {
+        "type": "string",
+        "description": "Optional help text."
+      },
+      "choices": {
+        "type": "array",
+        "minItems": 1,
+        "description": "For single_select and list.single_select.",
+        "items": {
+          "type": "object",
+          "required": [
+            "key",
+            "label"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "translatable": {
+        "type": "boolean",
+        "description": "For text and choice types: merchants can translate the values."
+      }
+    },
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "type": {
+              "enum": [
+                "single_select",
+                "list.single_select"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        "then": {
+          "required": [
+            "choices"
+          ]
+        }
+      }
+    ],
+    "defaultSnippets": [
+      {
+        "body": {
+          "owner_type": "${1:product}",
+          "namespace": "$2",
+          "key": "$3",
+          "type": "${4:string}",
+          "name": "$5"
+        }
+      }
+    ]
+  }
+}

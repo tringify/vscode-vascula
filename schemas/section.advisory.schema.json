@@ -1,0 +1,2379 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/tringify/vscode-vascula/schemas/section.advisory.schema.json",
+  "title": "Tringify section schema",
+  "markdownDescription": "The `{% schema %}` of a section or theme block.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema)",
+  "type": "object",
+  "required": [
+    "name"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "markdownDescription": "The section's name, unique in the theme. A theme block's name matches its file name."
+    },
+    "kind": {
+      "enum": [
+        "section",
+        "layout",
+        "embed",
+        "block"
+      ],
+      "markdownEnumDescriptions": [
+        "A section merchants place on a page (default).",
+        "A section for a global surface such as the header or footer. Declares a `target`.",
+        "A section for the overlay layer, such as a cart drawer or popup. Declares a `target`.",
+        "A theme block in `blocks/`. No `target` and no presets."
+      ],
+      "markdownDescription": "`section` (default), `layout`, `embed` or `block`.\n\n[Documentation](https://dev-docs.tringify.com/themes/sections#section-kinds)"
+    },
+    "target": {
+      "enum": [
+        "global_body_start",
+        "global_body_end",
+        "global_overlay"
+      ],
+      "markdownEnumDescriptions": [
+        "Opening of `<body>`, before the page template: announcement bar, header.",
+        "End of `<body>`, after the page template: footer.",
+        "Overlay layer: cart drawer, localization prompt, popups."
+      ],
+      "markdownDescription": "The global surface a `layout` or `embed` section renders in.\n\n[Documentation](https://dev-docs.tringify.com/themes/templates-and-surfaces#global-surfaces)"
+    },
+    "icon": {
+      "type": "string",
+      "description": "The icon shown for the section in the editor."
+    },
+    "ctx_needs": {
+      "type": "array",
+      "uniqueItems": true,
+      "markdownDescription": "The store data the section reads. Declare a root such as `product`, or a dotted need such as `cart.item_count`. A section can read only what it declares.\n\n[Documentation](https://dev-docs.tringify.com/ctx/runtime-context)",
+      "items": {
+        "type": "string",
+        "pattern": "^(auth_form|auth_notice|blog|blog_category|blog_post|blog_recent|brand|breadcrumbs|cart|category|collection|consent|csrf_token|customer|customer_settings|filters|form_error|form_notice|forms|list|localization|localization_prompt|menus|page|pages|phone_countries|policies|policy|product|products|recently_viewed|restock_notifications|review_notice|reviews|routes|search|shop|store_reviews|vendor|wishlist)(\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+        "errorMessage": "Unknown CTX name. A ctx_needs entry is a CTX root, such as product or cart, optionally followed by a field: cart.item_count.",
+        "defaultSnippets": [
+          {
+            "label": "auth_form",
+            "markdownDescription": "Safe hosted-auth form replay state after a submission. Present after a hosted form submission.",
+            "body": "auth_form"
+          },
+          {
+            "label": "auth_notice",
+            "markdownDescription": "A localized sign-in or registration status message. Present after a hosted form submission.",
+            "body": "auth_notice"
+          },
+          {
+            "label": "blog",
+            "markdownDescription": "The routed blog landing page and paginated article cards. Provided on `blog` pages.",
+            "body": "blog"
+          },
+          {
+            "label": "blog_category",
+            "markdownDescription": "The routed blog category metadata. The blog root carries its paginated article cards. Provided on `blog_category` pages.",
+            "body": "blog_category"
+          },
+          {
+            "label": "blog_post",
+            "markdownDescription": "The routed blog article, author, categories, comments, and comment pagination. Provided on `blog_post` pages.",
+            "body": "blog_post"
+          },
+          {
+            "label": "blog_recent",
+            "markdownDescription": "A bounded route-free list of recent published article cards. Requested data, available on normal storefront pages.",
+            "body": "blog_recent"
+          },
+          {
+            "label": "brand",
+            "markdownDescription": "The routed brand metadata and storefront-visible metafields. Provided on `brand` pages.",
+            "body": "brand"
+          },
+          {
+            "label": "breadcrumbs",
+            "markdownDescription": "The platform-resolved entity trail. Themes may prepend their localized Home link. Provided on its pages.",
+            "body": "breadcrumbs"
+          },
+          {
+            "label": "cart",
+            "markdownDescription": "The current cart. Header use receives counts; rich cart surfaces receive line, price, discount, limit, and shipping data. Requested data, available on normal storefront pages.",
+            "body": "cart"
+          },
+          {
+            "label": "category",
+            "markdownDescription": "The routed category metadata and storefront-visible metafields. Provided on `category` pages.",
+            "body": "category"
+          },
+          {
+            "label": "collection",
+            "markdownDescription": "The routed collection metadata and storefront-visible metafields. Provided on `collection` pages.",
+            "body": "collection"
+          },
+          {
+            "label": "consent",
+            "markdownDescription": "Visitor consent state. available_categories lists the optional cookie categories the consent banner offers, in display order; categories lists the ones the visitor has granted. Available on every page.",
+            "body": "consent"
+          },
+          {
+            "label": "csrf_token",
+            "markdownDescription": "The signed form nonce for hosted storefront mutations. Available on every page.",
+            "body": "csrf_token"
+          },
+          {
+            "label": "customer",
+            "markdownDescription": "The signed-in shopper and, when requested, their account addresses, orders, and routed receipt. Requested; provided on `account` pages.",
+            "body": "customer"
+          },
+          {
+            "label": "customer_settings",
+            "markdownDescription": "Storefront-safe account, sign-in, registration, consent, and customer feature settings. Requested data, available on normal storefront pages.",
+            "body": "customer_settings"
+          },
+          {
+            "label": "filters",
+            "markdownDescription": "Platform-resolved filters and active filter state for the current product listing. Provided on `shop`, `search`, `collection`, `category`, `vendor`, `brand` pages.",
+            "body": "filters"
+          },
+          {
+            "label": "form_error",
+            "markdownDescription": "A localized validation error returned by a hosted form. Present after a hosted form submission.",
+            "body": "form_error"
+          },
+          {
+            "label": "form_notice",
+            "markdownDescription": "A localized post-redirect result from a hosted storefront action. Present after a hosted form submission.",
+            "body": "form_notice"
+          },
+          {
+            "label": "forms",
+            "markdownDescription": "Hosted-action field requirements and length or media limits. Requested data, available on normal storefront pages.",
+            "body": "forms"
+          },
+          {
+            "label": "list",
+            "markdownDescription": "The generic vendor, brand, collection, or category index for the routed list page. Provided on `vendor_list`, `brand_list`, `collection_list`, `category_list` pages.",
+            "body": "list"
+          },
+          {
+            "label": "localization",
+            "markdownDescription": "Current locale and the country and language choices enabled for this storefront. Available on every page.",
+            "body": "localization"
+          },
+          {
+            "label": "localization_prompt",
+            "markdownDescription": "The platform decision for whether to offer a country or language change to this visitor. Available on every page.",
+            "body": "localization_prompt"
+          },
+          {
+            "label": "menus",
+            "markdownDescription": "Available navigation menus keyed by handle. Resource picker settings resolve a selected menu to its full item tree. Available on every page.",
+            "body": "menus"
+          },
+          {
+            "label": "page",
+            "markdownDescription": "The routed published content page. Provided on `page` pages.",
+            "body": "page"
+          },
+          {
+            "label": "pages",
+            "markdownDescription": "Bounded route-free index of published content pages for navigation surfaces. Requested data, available on normal storefront pages.",
+            "body": "pages"
+          },
+          {
+            "label": "phone_countries",
+            "markdownDescription": "Localized phone country options allowed by the store's customer settings. Requested data, available on normal storefront pages.",
+            "body": "phone_countries"
+          },
+          {
+            "label": "policies",
+            "markdownDescription": "Route-free index of published store policies for legal navigation. Requested data, available on normal storefront pages.",
+            "body": "policies"
+          },
+          {
+            "label": "policy",
+            "markdownDescription": "The routed published store policy. Provided on `policy` pages.",
+            "body": "policy"
+          },
+          {
+            "label": "product",
+            "markdownDescription": "The routed product with variants, options, pricing, availability, session state, and storefront-visible metafields. Provided on `product` pages.",
+            "body": "product"
+          },
+          {
+            "label": "products",
+            "markdownDescription": "A routed product grid with platform search, sort, and pagination state. Provided on `shop`, `search`, `collection`, `category`, `vendor`, `brand` pages.",
+            "body": "products"
+          },
+          {
+            "label": "recently_viewed",
+            "markdownDescription": "Visibility-gated product cards recently viewed on this device. Requested data, available on normal storefront pages.",
+            "body": "recently_viewed"
+          },
+          {
+            "label": "restock_notifications",
+            "markdownDescription": "Availability and channel rules for a product restock request form. Requested data, available on normal storefront pages.",
+            "body": "restock_notifications"
+          },
+          {
+            "label": "review_notice",
+            "markdownDescription": "Legacy alias of form_notice retained for installed theme compatibility. Present after a hosted form submission.",
+            "body": "review_notice"
+          },
+          {
+            "label": "reviews",
+            "markdownDescription": "Product review availability, aggregates, filters, and approved review rows. Requested; provided on `product` pages.",
+            "body": "reviews"
+          },
+          {
+            "label": "routes",
+            "markdownDescription": "Canonical storefront URLs using the store's locale, country, and permalink configuration. Available on every page.",
+            "body": "routes"
+          },
+          {
+            "label": "search",
+            "markdownDescription": "The search query, grouped result totals, and canonical result projections. Provided on `search` pages.",
+            "body": "search"
+          },
+          {
+            "label": "shop",
+            "markdownDescription": "Store identity, storefront-visible store metafields, and the active market's standing free-shipping offer. Available on every page.",
+            "body": "shop"
+          },
+          {
+            "label": "store_reviews",
+            "markdownDescription": "Store-wide approved reviews with product links and pagination. Requested data, available on normal storefront pages.",
+            "body": "store_reviews"
+          },
+          {
+            "label": "vendor",
+            "markdownDescription": "The routed vendor metadata and storefront-visible metafields. Provided on `vendor` pages.",
+            "body": "vendor"
+          },
+          {
+            "label": "wishlist",
+            "markdownDescription": "The visitor's wishlist state and, for rich surfaces, its sellable product rows. Requested data, available on normal storefront pages.",
+            "body": "wishlist"
+          },
+          {
+            "label": "auth_form.email",
+            "markdownDescription": "Only `email` of `auth_form`.",
+            "body": "auth_form.email"
+          },
+          {
+            "label": "auth_form.otp_step",
+            "markdownDescription": "Only `otp_step` of `auth_form`.",
+            "body": "auth_form.otp_step"
+          },
+          {
+            "label": "auth_form.phone_method",
+            "markdownDescription": "Only `phone_method` of `auth_form`.",
+            "body": "auth_form.phone_method"
+          },
+          {
+            "label": "auth_form.phone_number",
+            "markdownDescription": "Only `phone_number` of `auth_form`.",
+            "body": "auth_form.phone_number"
+          },
+          {
+            "label": "auth_form.provider",
+            "markdownDescription": "Only `provider` of `auth_form`.",
+            "body": "auth_form.provider"
+          },
+          {
+            "label": "auth_form.purpose",
+            "markdownDescription": "Only `purpose` of `auth_form`.",
+            "body": "auth_form.purpose"
+          },
+          {
+            "label": "auth_notice.code",
+            "markdownDescription": "Only `code` of `auth_notice`.",
+            "body": "auth_notice.code"
+          },
+          {
+            "label": "auth_notice.field",
+            "markdownDescription": "Only `field` of `auth_notice`.",
+            "body": "auth_notice.field"
+          },
+          {
+            "label": "auth_notice.locale",
+            "markdownDescription": "Only `locale` of `auth_notice`.",
+            "body": "auth_notice.locale"
+          },
+          {
+            "label": "auth_notice.message",
+            "markdownDescription": "Only `message` of `auth_notice`.",
+            "body": "auth_notice.message"
+          },
+          {
+            "label": "auth_notice.params",
+            "markdownDescription": "Only `params` of `auth_notice`.",
+            "body": "auth_notice.params"
+          },
+          {
+            "label": "auth_notice.path",
+            "markdownDescription": "Only `path` of `auth_notice`.",
+            "body": "auth_notice.path"
+          },
+          {
+            "label": "auth_notice.request_id",
+            "markdownDescription": "Only `request_id` of `auth_notice`.",
+            "body": "auth_notice.request_id"
+          },
+          {
+            "label": "blog.items",
+            "markdownDescription": "Only `items` of `blog`.",
+            "body": "blog.items"
+          },
+          {
+            "label": "blog.pagination",
+            "markdownDescription": "Only `pagination` of `blog`.",
+            "body": "blog.pagination"
+          },
+          {
+            "label": "blog.search",
+            "markdownDescription": "Only `search` of `blog`.",
+            "body": "blog.search"
+          },
+          {
+            "label": "blog.tag",
+            "markdownDescription": "Only `tag` of `blog`.",
+            "body": "blog.tag"
+          },
+          {
+            "label": "blog_category.description",
+            "markdownDescription": "Only `description` of `blog_category`.",
+            "body": "blog_category.description"
+          },
+          {
+            "label": "blog_category.metafields",
+            "markdownDescription": "Only `metafields` of `blog_category`.",
+            "body": "blog_category.metafields"
+          },
+          {
+            "label": "blog_category.name",
+            "markdownDescription": "Only `name` of `blog_category`.",
+            "body": "blog_category.name"
+          },
+          {
+            "label": "blog_category.post_count",
+            "markdownDescription": "Only `post_count` of `blog_category`.",
+            "body": "blog_category.post_count"
+          },
+          {
+            "label": "blog_category.seo_description",
+            "markdownDescription": "Only `seo_description` of `blog_category`.",
+            "body": "blog_category.seo_description"
+          },
+          {
+            "label": "blog_category.seo_title",
+            "markdownDescription": "Only `seo_title` of `blog_category`.",
+            "body": "blog_category.seo_title"
+          },
+          {
+            "label": "blog_category.slug",
+            "markdownDescription": "Only `slug` of `blog_category`.",
+            "body": "blog_category.slug"
+          },
+          {
+            "label": "blog_post.author",
+            "markdownDescription": "Only `author` of `blog_post`.",
+            "body": "blog_post.author"
+          },
+          {
+            "label": "blog_post.author_name",
+            "markdownDescription": "Only `author_name` of `blog_post`.",
+            "body": "blog_post.author_name"
+          },
+          {
+            "label": "blog_post.categories",
+            "markdownDescription": "Only `categories` of `blog_post`.",
+            "body": "blog_post.categories"
+          },
+          {
+            "label": "blog_post.comment_count",
+            "markdownDescription": "Only `comment_count` of `blog_post`.",
+            "body": "blog_post.comment_count"
+          },
+          {
+            "label": "blog_post.comments",
+            "markdownDescription": "Only `comments` of `blog_post`.",
+            "body": "blog_post.comments"
+          },
+          {
+            "label": "blog_post.comments_enabled",
+            "markdownDescription": "Only `comments_enabled` of `blog_post`.",
+            "body": "blog_post.comments_enabled"
+          },
+          {
+            "label": "blog_post.comments_login_required",
+            "markdownDescription": "Only `comments_login_required` of `blog_post`.",
+            "body": "blog_post.comments_login_required"
+          },
+          {
+            "label": "blog_post.comments_total",
+            "markdownDescription": "Only `comments_total` of `blog_post`.",
+            "body": "blog_post.comments_total"
+          },
+          {
+            "label": "blog_post.content",
+            "markdownDescription": "Only `content` of `blog_post`.",
+            "body": "blog_post.content"
+          },
+          {
+            "label": "blog_post.excerpt",
+            "markdownDescription": "Only `excerpt` of `blog_post`.",
+            "body": "blog_post.excerpt"
+          },
+          {
+            "label": "blog_post.featured_image",
+            "markdownDescription": "Only `featured_image` of `blog_post`.",
+            "body": "blog_post.featured_image"
+          },
+          {
+            "label": "blog_post.metafields",
+            "markdownDescription": "Only `metafields` of `blog_post`.",
+            "body": "blog_post.metafields"
+          },
+          {
+            "label": "blog_post.published_at",
+            "markdownDescription": "Only `published_at` of `blog_post`.",
+            "body": "blog_post.published_at"
+          },
+          {
+            "label": "blog_post.seo_description",
+            "markdownDescription": "Only `seo_description` of `blog_post`.",
+            "body": "blog_post.seo_description"
+          },
+          {
+            "label": "blog_post.seo_title",
+            "markdownDescription": "Only `seo_title` of `blog_post`.",
+            "body": "blog_post.seo_title"
+          },
+          {
+            "label": "blog_post.slug",
+            "markdownDescription": "Only `slug` of `blog_post`.",
+            "body": "blog_post.slug"
+          },
+          {
+            "label": "blog_post.tags",
+            "markdownDescription": "Only `tags` of `blog_post`.",
+            "body": "blog_post.tags"
+          },
+          {
+            "label": "blog_post.title",
+            "markdownDescription": "Only `title` of `blog_post`.",
+            "body": "blog_post.title"
+          },
+          {
+            "label": "brand.description",
+            "markdownDescription": "Only `description` of `brand`.",
+            "body": "brand.description"
+          },
+          {
+            "label": "brand.id",
+            "markdownDescription": "Only `id` of `brand`.",
+            "body": "brand.id"
+          },
+          {
+            "label": "brand.image",
+            "markdownDescription": "Only `image` of `brand`.",
+            "body": "brand.image"
+          },
+          {
+            "label": "brand.metafields",
+            "markdownDescription": "Only `metafields` of `brand`.",
+            "body": "brand.metafields"
+          },
+          {
+            "label": "brand.name",
+            "markdownDescription": "Only `name` of `brand`.",
+            "body": "brand.name"
+          },
+          {
+            "label": "brand.product_count",
+            "markdownDescription": "Only `product_count` of `brand`.",
+            "body": "brand.product_count"
+          },
+          {
+            "label": "brand.seo_description",
+            "markdownDescription": "Only `seo_description` of `brand`.",
+            "body": "brand.seo_description"
+          },
+          {
+            "label": "brand.seo_title",
+            "markdownDescription": "Only `seo_title` of `brand`.",
+            "body": "brand.seo_title"
+          },
+          {
+            "label": "brand.slug",
+            "markdownDescription": "Only `slug` of `brand`.",
+            "body": "brand.slug"
+          },
+          {
+            "label": "brand.url",
+            "markdownDescription": "Only `url` of `brand`.",
+            "body": "brand.url"
+          },
+          {
+            "label": "breadcrumbs.items",
+            "markdownDescription": "Only `items` of `breadcrumbs`.",
+            "body": "breadcrumbs.items"
+          },
+          {
+            "label": "cart.advertised_coupons",
+            "markdownDescription": "Only `advertised_coupons` of `cart`.",
+            "body": "cart.advertised_coupons"
+          },
+          {
+            "label": "cart.checkout_limits",
+            "markdownDescription": "Only `checkout_limits` of `cart`.",
+            "body": "cart.checkout_limits"
+          },
+          {
+            "label": "cart.coupon_codes",
+            "markdownDescription": "Only `coupon_codes` of `cart`.",
+            "body": "cart.coupon_codes"
+          },
+          {
+            "label": "cart.currency_code",
+            "markdownDescription": "Only `currency_code` of `cart`.",
+            "body": "cart.currency_code"
+          },
+          {
+            "label": "cart.discount_nudges",
+            "markdownDescription": "Only `discount_nudges` of `cart`.",
+            "body": "cart.discount_nudges"
+          },
+          {
+            "label": "cart.discount_stacking",
+            "markdownDescription": "Only `discount_stacking` of `cart`.",
+            "body": "cart.discount_stacking"
+          },
+          {
+            "label": "cart.discount_total",
+            "markdownDescription": "Only `discount_total` of `cart`.",
+            "body": "cart.discount_total"
+          },
+          {
+            "label": "cart.discounts",
+            "markdownDescription": "Only `discounts` of `cart`.",
+            "body": "cart.discounts"
+          },
+          {
+            "label": "cart.formatted_discount_total",
+            "markdownDescription": "Only `formatted_discount_total` of `cart`.",
+            "body": "cart.formatted_discount_total"
+          },
+          {
+            "label": "cart.free_shipping",
+            "markdownDescription": "Only `free_shipping` of `cart`.",
+            "body": "cart.free_shipping"
+          },
+          {
+            "label": "cart.gift_offers",
+            "markdownDescription": "Only `gift_offers` of `cart`.",
+            "body": "cart.gift_offers"
+          },
+          {
+            "label": "cart.item_count",
+            "markdownDescription": "Only `item_count` of `cart`.",
+            "body": "cart.item_count"
+          },
+          {
+            "label": "cart.items",
+            "markdownDescription": "Only `items` of `cart`.",
+            "body": "cart.items"
+          },
+          {
+            "label": "cart.subtotal",
+            "markdownDescription": "Only `subtotal` of `cart`.",
+            "body": "cart.subtotal"
+          },
+          {
+            "label": "cart.total",
+            "markdownDescription": "Only `total` of `cart`.",
+            "body": "cart.total"
+          },
+          {
+            "label": "cart.unique_item_count",
+            "markdownDescription": "Only `unique_item_count` of `cart`.",
+            "body": "cart.unique_item_count"
+          },
+          {
+            "label": "category.description",
+            "markdownDescription": "Only `description` of `category`.",
+            "body": "category.description"
+          },
+          {
+            "label": "category.id",
+            "markdownDescription": "Only `id` of `category`.",
+            "body": "category.id"
+          },
+          {
+            "label": "category.image",
+            "markdownDescription": "Only `image` of `category`.",
+            "body": "category.image"
+          },
+          {
+            "label": "category.metafields",
+            "markdownDescription": "Only `metafields` of `category`.",
+            "body": "category.metafields"
+          },
+          {
+            "label": "category.name",
+            "markdownDescription": "Only `name` of `category`.",
+            "body": "category.name"
+          },
+          {
+            "label": "category.product_count",
+            "markdownDescription": "Only `product_count` of `category`.",
+            "body": "category.product_count"
+          },
+          {
+            "label": "category.slug",
+            "markdownDescription": "Only `slug` of `category`.",
+            "body": "category.slug"
+          },
+          {
+            "label": "collection.description",
+            "markdownDescription": "Only `description` of `collection`.",
+            "body": "collection.description"
+          },
+          {
+            "label": "collection.id",
+            "markdownDescription": "Only `id` of `collection`.",
+            "body": "collection.id"
+          },
+          {
+            "label": "collection.image",
+            "markdownDescription": "Only `image` of `collection`.",
+            "body": "collection.image"
+          },
+          {
+            "label": "collection.metafields",
+            "markdownDescription": "Only `metafields` of `collection`.",
+            "body": "collection.metafields"
+          },
+          {
+            "label": "collection.name",
+            "markdownDescription": "Only `name` of `collection`.",
+            "body": "collection.name"
+          },
+          {
+            "label": "collection.product_count",
+            "markdownDescription": "Only `product_count` of `collection`.",
+            "body": "collection.product_count"
+          },
+          {
+            "label": "collection.slug",
+            "markdownDescription": "Only `slug` of `collection`.",
+            "body": "collection.slug"
+          },
+          {
+            "label": "consent.available_categories",
+            "markdownDescription": "Only `available_categories` of `consent`.",
+            "body": "consent.available_categories"
+          },
+          {
+            "label": "consent.categories",
+            "markdownDescription": "Only `categories` of `consent`.",
+            "body": "consent.categories"
+          },
+          {
+            "label": "consent.given",
+            "markdownDescription": "Only `given` of `consent`.",
+            "body": "consent.given"
+          },
+          {
+            "label": "consent.required",
+            "markdownDescription": "Only `required` of `consent`.",
+            "body": "consent.required"
+          },
+          {
+            "label": "customer.accepts_marketing",
+            "markdownDescription": "Only `accepts_marketing` of `customer`.",
+            "body": "customer.accepts_marketing"
+          },
+          {
+            "label": "customer.account_url",
+            "markdownDescription": "Only `account_url` of `customer`.",
+            "body": "customer.account_url"
+          },
+          {
+            "label": "customer.address_form",
+            "markdownDescription": "Only `address_form` of `customer`.",
+            "body": "customer.address_form"
+          },
+          {
+            "label": "customer.addresses",
+            "markdownDescription": "Only `addresses` of `customer`.",
+            "body": "customer.addresses"
+          },
+          {
+            "label": "customer.created_at",
+            "markdownDescription": "Only `created_at` of `customer`.",
+            "body": "customer.created_at"
+          },
+          {
+            "label": "customer.date_of_birth",
+            "markdownDescription": "Only `date_of_birth` of `customer`.",
+            "body": "customer.date_of_birth"
+          },
+          {
+            "label": "customer.display_name",
+            "markdownDescription": "Only `display_name` of `customer`.",
+            "body": "customer.display_name"
+          },
+          {
+            "label": "customer.email",
+            "markdownDescription": "Only `email` of `customer`.",
+            "body": "customer.email"
+          },
+          {
+            "label": "customer.email_verified",
+            "markdownDescription": "Only `email_verified` of `customer`.",
+            "body": "customer.email_verified"
+          },
+          {
+            "label": "customer.first_name",
+            "markdownDescription": "Only `first_name` of `customer`.",
+            "body": "customer.first_name"
+          },
+          {
+            "label": "customer.id",
+            "markdownDescription": "Only `id` of `customer`.",
+            "body": "customer.id"
+          },
+          {
+            "label": "customer.last_name",
+            "markdownDescription": "Only `last_name` of `customer`.",
+            "body": "customer.last_name"
+          },
+          {
+            "label": "customer.logged_in",
+            "markdownDescription": "Only `logged_in` of `customer`.",
+            "body": "customer.logged_in"
+          },
+          {
+            "label": "customer.logout_url",
+            "markdownDescription": "Only `logout_url` of `customer`.",
+            "body": "customer.logout_url"
+          },
+          {
+            "label": "customer.order",
+            "markdownDescription": "Only `order` of `customer`.",
+            "body": "customer.order"
+          },
+          {
+            "label": "customer.orders",
+            "markdownDescription": "Only `orders` of `customer`.",
+            "body": "customer.orders"
+          },
+          {
+            "label": "customer.orders_count",
+            "markdownDescription": "Only `orders_count` of `customer`.",
+            "body": "customer.orders_count"
+          },
+          {
+            "label": "customer.phone",
+            "markdownDescription": "Only `phone` of `customer`.",
+            "body": "customer.phone"
+          },
+          {
+            "label": "customer.phone_verified",
+            "markdownDescription": "Only `phone_verified` of `customer`.",
+            "body": "customer.phone_verified"
+          },
+          {
+            "label": "customer_settings.account_mode",
+            "markdownDescription": "Only `account_mode` of `customer_settings`.",
+            "body": "customer_settings.account_mode"
+          },
+          {
+            "label": "customer_settings.account_url",
+            "markdownDescription": "Only `account_url` of `customer_settings`.",
+            "body": "customer_settings.account_url"
+          },
+          {
+            "label": "customer_settings.accounts_available",
+            "markdownDescription": "Only `accounts_available` of `customer_settings`.",
+            "body": "customer_settings.accounts_available"
+          },
+          {
+            "label": "customer_settings.collect_checkout_marketing_consent",
+            "markdownDescription": "Only `collect_checkout_marketing_consent` of `customer_settings`.",
+            "body": "customer_settings.collect_checkout_marketing_consent"
+          },
+          {
+            "label": "customer_settings.collect_marketing_consent",
+            "markdownDescription": "Only `collect_marketing_consent` of `customer_settings`.",
+            "body": "customer_settings.collect_marketing_consent"
+          },
+          {
+            "label": "customer_settings.default_phone_country",
+            "markdownDescription": "Only `default_phone_country` of `customer_settings`.",
+            "body": "customer_settings.default_phone_country"
+          },
+          {
+            "label": "customer_settings.email_login_available",
+            "markdownDescription": "Only `email_login_available` of `customer_settings`.",
+            "body": "customer_settings.email_login_available"
+          },
+          {
+            "label": "customer_settings.email_otp_enabled",
+            "markdownDescription": "Only `email_otp_enabled` of `customer_settings`.",
+            "body": "customer_settings.email_otp_enabled"
+          },
+          {
+            "label": "customer_settings.guest_cart_duration_days",
+            "markdownDescription": "Only `guest_cart_duration_days` of `customer_settings`.",
+            "body": "customer_settings.guest_cart_duration_days"
+          },
+          {
+            "label": "customer_settings.guest_wishlist_duration_days",
+            "markdownDescription": "Only `guest_wishlist_duration_days` of `customer_settings`.",
+            "body": "customer_settings.guest_wishlist_duration_days"
+          },
+          {
+            "label": "customer_settings.guest_wishlist_enabled",
+            "markdownDescription": "Only `guest_wishlist_enabled` of `customer_settings`.",
+            "body": "customer_settings.guest_wishlist_enabled"
+          },
+          {
+            "label": "customer_settings.login_url",
+            "markdownDescription": "Only `login_url` of `customer_settings`.",
+            "body": "customer_settings.login_url"
+          },
+          {
+            "label": "customer_settings.phone_login_available",
+            "markdownDescription": "Only `phone_login_available` of `customer_settings`.",
+            "body": "customer_settings.phone_login_available"
+          },
+          {
+            "label": "customer_settings.phone_otp_enabled",
+            "markdownDescription": "Only `phone_otp_enabled` of `customer_settings`.",
+            "body": "customer_settings.phone_otp_enabled"
+          },
+          {
+            "label": "customer_settings.phone_registration_available",
+            "markdownDescription": "Only `phone_registration_available` of `customer_settings`.",
+            "body": "customer_settings.phone_registration_available"
+          },
+          {
+            "label": "customer_settings.preferred_auth_method",
+            "markdownDescription": "Only `preferred_auth_method` of `customer_settings`.",
+            "body": "customer_settings.preferred_auth_method"
+          },
+          {
+            "label": "customer_settings.privacy_request_url",
+            "markdownDescription": "Only `privacy_request_url` of `customer_settings`.",
+            "body": "customer_settings.privacy_request_url"
+          },
+          {
+            "label": "customer_settings.register_url",
+            "markdownDescription": "Only `register_url` of `customer_settings`.",
+            "body": "customer_settings.register_url"
+          },
+          {
+            "label": "customer_settings.registration_enabled",
+            "markdownDescription": "Only `registration_enabled` of `customer_settings`.",
+            "body": "customer_settings.registration_enabled"
+          },
+          {
+            "label": "customer_settings.registration_fields",
+            "markdownDescription": "Only `registration_fields` of `customer_settings`.",
+            "body": "customer_settings.registration_fields"
+          },
+          {
+            "label": "customer_settings.require_newsletter_double_opt_in",
+            "markdownDescription": "Only `require_newsletter_double_opt_in` of `customer_settings`.",
+            "body": "customer_settings.require_newsletter_double_opt_in"
+          },
+          {
+            "label": "customer_settings.wishlist_enabled",
+            "markdownDescription": "Only `wishlist_enabled` of `customer_settings`.",
+            "body": "customer_settings.wishlist_enabled"
+          },
+          {
+            "label": "customer_settings.wishlist_max_items",
+            "markdownDescription": "Only `wishlist_max_items` of `customer_settings`.",
+            "body": "customer_settings.wishlist_max_items"
+          },
+          {
+            "label": "filters.applied_count",
+            "markdownDescription": "Only `applied_count` of `filters`.",
+            "body": "filters.applied_count"
+          },
+          {
+            "label": "filters.clear_url",
+            "markdownDescription": "Only `clear_url` of `filters`.",
+            "body": "filters.clear_url"
+          },
+          {
+            "label": "filters.inputs",
+            "markdownDescription": "Only `inputs` of `filters`.",
+            "body": "filters.inputs"
+          },
+          {
+            "label": "filters.items",
+            "markdownDescription": "Only `items` of `filters`.",
+            "body": "filters.items"
+          },
+          {
+            "label": "filters.price",
+            "markdownDescription": "Only `price` of `filters`.",
+            "body": "filters.price"
+          },
+          {
+            "label": "form_error.code",
+            "markdownDescription": "Only `code` of `form_error`.",
+            "body": "form_error.code"
+          },
+          {
+            "label": "form_error.field",
+            "markdownDescription": "Only `field` of `form_error`.",
+            "body": "form_error.field"
+          },
+          {
+            "label": "form_error.locale",
+            "markdownDescription": "Only `locale` of `form_error`.",
+            "body": "form_error.locale"
+          },
+          {
+            "label": "form_error.message",
+            "markdownDescription": "Only `message` of `form_error`.",
+            "body": "form_error.message"
+          },
+          {
+            "label": "form_error.params",
+            "markdownDescription": "Only `params` of `form_error`.",
+            "body": "form_error.params"
+          },
+          {
+            "label": "form_error.path",
+            "markdownDescription": "Only `path` of `form_error`.",
+            "body": "form_error.path"
+          },
+          {
+            "label": "form_error.request_id",
+            "markdownDescription": "Only `request_id` of `form_error`.",
+            "body": "form_error.request_id"
+          },
+          {
+            "label": "form_notice.code",
+            "markdownDescription": "Only `code` of `form_notice`.",
+            "body": "form_notice.code"
+          },
+          {
+            "label": "form_notice.message",
+            "markdownDescription": "Only `message` of `form_notice`.",
+            "body": "form_notice.message"
+          },
+          {
+            "label": "form_notice.success",
+            "markdownDescription": "Only `success` of `form_notice`.",
+            "body": "form_notice.success"
+          },
+          {
+            "label": "forms.comment",
+            "markdownDescription": "Only `comment` of `forms`.",
+            "body": "forms.comment"
+          },
+          {
+            "label": "forms.contact",
+            "markdownDescription": "Only `contact` of `forms`.",
+            "body": "forms.contact"
+          },
+          {
+            "label": "forms.newsletter",
+            "markdownDescription": "Only `newsletter` of `forms`.",
+            "body": "forms.newsletter"
+          },
+          {
+            "label": "forms.review",
+            "markdownDescription": "Only `review` of `forms`.",
+            "body": "forms.review"
+          },
+          {
+            "label": "list.items",
+            "markdownDescription": "Only `items` of `list`.",
+            "body": "list.items"
+          },
+          {
+            "label": "list.pagination",
+            "markdownDescription": "Only `pagination` of `list`.",
+            "body": "list.pagination"
+          },
+          {
+            "label": "list.title",
+            "markdownDescription": "Only `title` of `list`.",
+            "body": "list.title"
+          },
+          {
+            "label": "localization.available_countries",
+            "markdownDescription": "Only `available_countries` of `localization`.",
+            "body": "localization.available_countries"
+          },
+          {
+            "label": "localization.available_languages",
+            "markdownDescription": "Only `available_languages` of `localization`.",
+            "body": "localization.available_languages"
+          },
+          {
+            "label": "localization.baseline_locale",
+            "markdownDescription": "Only `baseline_locale` of `localization`.",
+            "body": "localization.baseline_locale"
+          },
+          {
+            "label": "localization.country",
+            "markdownDescription": "Only `country` of `localization`.",
+            "body": "localization.country"
+          },
+          {
+            "label": "localization.locale",
+            "markdownDescription": "Only `locale` of `localization`.",
+            "body": "localization.locale"
+          },
+          {
+            "label": "localization_prompt.can_choose_country",
+            "markdownDescription": "Only `can_choose_country` of `localization_prompt`.",
+            "body": "localization_prompt.can_choose_country"
+          },
+          {
+            "label": "localization_prompt.can_choose_locale",
+            "markdownDescription": "Only `can_choose_locale` of `localization_prompt`.",
+            "body": "localization_prompt.can_choose_locale"
+          },
+          {
+            "label": "localization_prompt.current_country_code",
+            "markdownDescription": "Only `current_country_code` of `localization_prompt`.",
+            "body": "localization_prompt.current_country_code"
+          },
+          {
+            "label": "localization_prompt.dismissal_days",
+            "markdownDescription": "Only `dismissal_days` of `localization_prompt`.",
+            "body": "localization_prompt.dismissal_days"
+          },
+          {
+            "label": "localization_prompt.dismissed",
+            "markdownDescription": "Only `dismissed` of `localization_prompt`.",
+            "body": "localization_prompt.dismissed"
+          },
+          {
+            "label": "localization_prompt.enabled",
+            "markdownDescription": "Only `enabled` of `localization_prompt`.",
+            "body": "localization_prompt.enabled"
+          },
+          {
+            "label": "localization_prompt.mode",
+            "markdownDescription": "Only `mode` of `localization_prompt`.",
+            "body": "localization_prompt.mode"
+          },
+          {
+            "label": "localization_prompt.reason",
+            "markdownDescription": "Only `reason` of `localization_prompt`.",
+            "body": "localization_prompt.reason"
+          },
+          {
+            "label": "localization_prompt.should_show",
+            "markdownDescription": "Only `should_show` of `localization_prompt`.",
+            "body": "localization_prompt.should_show"
+          },
+          {
+            "label": "localization_prompt.suggested_country_code",
+            "markdownDescription": "Only `suggested_country_code` of `localization_prompt`.",
+            "body": "localization_prompt.suggested_country_code"
+          },
+          {
+            "label": "localization_prompt.visitor_country_code",
+            "markdownDescription": "Only `visitor_country_code` of `localization_prompt`.",
+            "body": "localization_prompt.visitor_country_code"
+          },
+          {
+            "label": "page.content",
+            "markdownDescription": "Only `content` of `page`.",
+            "body": "page.content"
+          },
+          {
+            "label": "page.metafields",
+            "markdownDescription": "Only `metafields` of `page`.",
+            "body": "page.metafields"
+          },
+          {
+            "label": "page.seo_description",
+            "markdownDescription": "Only `seo_description` of `page`.",
+            "body": "page.seo_description"
+          },
+          {
+            "label": "page.seo_title",
+            "markdownDescription": "Only `seo_title` of `page`.",
+            "body": "page.seo_title"
+          },
+          {
+            "label": "page.slug",
+            "markdownDescription": "Only `slug` of `page`.",
+            "body": "page.slug"
+          },
+          {
+            "label": "page.title",
+            "markdownDescription": "Only `title` of `page`.",
+            "body": "page.title"
+          },
+          {
+            "label": "policy.content",
+            "markdownDescription": "Only `content` of `policy`.",
+            "body": "policy.content"
+          },
+          {
+            "label": "policy.seo_description",
+            "markdownDescription": "Only `seo_description` of `policy`.",
+            "body": "policy.seo_description"
+          },
+          {
+            "label": "policy.seo_title",
+            "markdownDescription": "Only `seo_title` of `policy`.",
+            "body": "policy.seo_title"
+          },
+          {
+            "label": "policy.slug",
+            "markdownDescription": "Only `slug` of `policy`.",
+            "body": "policy.slug"
+          },
+          {
+            "label": "policy.title",
+            "markdownDescription": "Only `title` of `policy`.",
+            "body": "policy.title"
+          },
+          {
+            "label": "policy.type",
+            "markdownDescription": "Only `type` of `policy`.",
+            "body": "policy.type"
+          },
+          {
+            "label": "product.available_for_sale",
+            "markdownDescription": "Only `available_for_sale` of `product`.",
+            "body": "product.available_for_sale"
+          },
+          {
+            "label": "product.barcode",
+            "markdownDescription": "Only `barcode` of `product`.",
+            "body": "product.barcode"
+          },
+          {
+            "label": "product.categories",
+            "markdownDescription": "Only `categories` of `product`.",
+            "body": "product.categories"
+          },
+          {
+            "label": "product.description",
+            "markdownDescription": "Only `description` of `product`.",
+            "body": "product.description"
+          },
+          {
+            "label": "product.display_variant",
+            "markdownDescription": "Only `display_variant` of `product`.",
+            "body": "product.display_variant"
+          },
+          {
+            "label": "product.featured_image",
+            "markdownDescription": "Only `featured_image` of `product`.",
+            "body": "product.featured_image"
+          },
+          {
+            "label": "product.gift_only",
+            "markdownDescription": "Only `gift_only` of `product`.",
+            "body": "product.gift_only"
+          },
+          {
+            "label": "product.id",
+            "markdownDescription": "Only `id` of `product`.",
+            "body": "product.id"
+          },
+          {
+            "label": "product.images",
+            "markdownDescription": "Only `images` of `product`.",
+            "body": "product.images"
+          },
+          {
+            "label": "product.inventory_status",
+            "markdownDescription": "Only `inventory_status` of `product`.",
+            "body": "product.inventory_status"
+          },
+          {
+            "label": "product.is_gift_card",
+            "markdownDescription": "Only `is_gift_card` of `product`.",
+            "body": "product.is_gift_card"
+          },
+          {
+            "label": "product.max_order_quantity",
+            "markdownDescription": "Only `max_order_quantity` of `product`.",
+            "body": "product.max_order_quantity"
+          },
+          {
+            "label": "product.metafields",
+            "markdownDescription": "Only `metafields` of `product`.",
+            "body": "product.metafields"
+          },
+          {
+            "label": "product.notify_me_eligible",
+            "markdownDescription": "Only `notify_me_eligible` of `product`.",
+            "body": "product.notify_me_eligible"
+          },
+          {
+            "label": "product.options",
+            "markdownDescription": "Only `options` of `product`.",
+            "body": "product.options"
+          },
+          {
+            "label": "product.price",
+            "markdownDescription": "Only `price` of `product`.",
+            "body": "product.price"
+          },
+          {
+            "label": "product.price_range",
+            "markdownDescription": "Only `price_range` of `product`.",
+            "body": "product.price_range"
+          },
+          {
+            "label": "product.price_tiers",
+            "markdownDescription": "Only `price_tiers` of `product`.",
+            "body": "product.price_tiers"
+          },
+          {
+            "label": "product.purchase_state",
+            "markdownDescription": "Only `purchase_state` of `product`.",
+            "body": "product.purchase_state"
+          },
+          {
+            "label": "product.quantity_max",
+            "markdownDescription": "Only `quantity_max` of `product`.",
+            "body": "product.quantity_max"
+          },
+          {
+            "label": "product.rating",
+            "markdownDescription": "Only `rating` of `product`.",
+            "body": "product.rating"
+          },
+          {
+            "label": "product.related",
+            "markdownDescription": "Only `related` of `product`.",
+            "body": "product.related"
+          },
+          {
+            "label": "product.requested_options",
+            "markdownDescription": "Only `requested_options` of `product`.",
+            "body": "product.requested_options"
+          },
+          {
+            "label": "product.requires_shipping",
+            "markdownDescription": "Only `requires_shipping` of `product`.",
+            "body": "product.requires_shipping"
+          },
+          {
+            "label": "product.selected_variant",
+            "markdownDescription": "Only `selected_variant` of `product`.",
+            "body": "product.selected_variant"
+          },
+          {
+            "label": "product.selection_complete",
+            "markdownDescription": "Only `selection_complete` of `product`.",
+            "body": "product.selection_complete"
+          },
+          {
+            "label": "product.seo_description",
+            "markdownDescription": "Only `seo_description` of `product`.",
+            "body": "product.seo_description"
+          },
+          {
+            "label": "product.seo_title",
+            "markdownDescription": "Only `seo_title` of `product`.",
+            "body": "product.seo_title"
+          },
+          {
+            "label": "product.session_state",
+            "markdownDescription": "Only `session_state` of `product`.",
+            "body": "product.session_state"
+          },
+          {
+            "label": "product.short_description",
+            "markdownDescription": "Only `short_description` of `product`.",
+            "body": "product.short_description"
+          },
+          {
+            "label": "product.sku",
+            "markdownDescription": "Only `sku` of `product`.",
+            "body": "product.sku"
+          },
+          {
+            "label": "product.slug",
+            "markdownDescription": "Only `slug` of `product`.",
+            "body": "product.slug"
+          },
+          {
+            "label": "product.tag_refs",
+            "markdownDescription": "Only `tag_refs` of `product`.",
+            "body": "product.tag_refs"
+          },
+          {
+            "label": "product.tags",
+            "markdownDescription": "Only `tags` of `product`.",
+            "body": "product.tags"
+          },
+          {
+            "label": "product.title",
+            "markdownDescription": "Only `title` of `product`.",
+            "body": "product.title"
+          },
+          {
+            "label": "product.type",
+            "markdownDescription": "Only `type` of `product`.",
+            "body": "product.type"
+          },
+          {
+            "label": "product.url",
+            "markdownDescription": "Only `url` of `product`.",
+            "body": "product.url"
+          },
+          {
+            "label": "product.variants",
+            "markdownDescription": "Only `variants` of `product`.",
+            "body": "product.variants"
+          },
+          {
+            "label": "product.vendor",
+            "markdownDescription": "Only `vendor` of `product`.",
+            "body": "product.vendor"
+          },
+          {
+            "label": "products.items",
+            "markdownDescription": "Only `items` of `products`.",
+            "body": "products.items"
+          },
+          {
+            "label": "products.pagination",
+            "markdownDescription": "Only `pagination` of `products`.",
+            "body": "products.pagination"
+          },
+          {
+            "label": "products.search",
+            "markdownDescription": "Only `search` of `products`.",
+            "body": "products.search"
+          },
+          {
+            "label": "products.sort",
+            "markdownDescription": "Only `sort` of `products`.",
+            "body": "products.sort"
+          },
+          {
+            "label": "recently_viewed.items",
+            "markdownDescription": "Only `items` of `recently_viewed`.",
+            "body": "recently_viewed.items"
+          },
+          {
+            "label": "restock_notifications.email_input_required",
+            "markdownDescription": "Only `email_input_required` of `restock_notifications`.",
+            "body": "restock_notifications.email_input_required"
+          },
+          {
+            "label": "restock_notifications.enabled",
+            "markdownDescription": "Only `enabled` of `restock_notifications`.",
+            "body": "restock_notifications.enabled"
+          },
+          {
+            "label": "restock_notifications.login_required",
+            "markdownDescription": "Only `login_required` of `restock_notifications`.",
+            "body": "restock_notifications.login_required"
+          },
+          {
+            "label": "restock_notifications.mode",
+            "markdownDescription": "Only `mode` of `restock_notifications`.",
+            "body": "restock_notifications.mode"
+          },
+          {
+            "label": "restock_notifications.sms_available",
+            "markdownDescription": "Only `sms_available` of `restock_notifications`.",
+            "body": "restock_notifications.sms_available"
+          },
+          {
+            "label": "review_notice.code",
+            "markdownDescription": "Only `code` of `review_notice`.",
+            "body": "review_notice.code"
+          },
+          {
+            "label": "review_notice.message",
+            "markdownDescription": "Only `message` of `review_notice`.",
+            "body": "review_notice.message"
+          },
+          {
+            "label": "review_notice.success",
+            "markdownDescription": "Only `success` of `review_notice`.",
+            "body": "review_notice.success"
+          },
+          {
+            "label": "reviews.enabled",
+            "markdownDescription": "Only `enabled` of `reviews`.",
+            "body": "reviews.enabled"
+          },
+          {
+            "label": "reviews.has_more",
+            "markdownDescription": "Only `has_more` of `reviews`.",
+            "body": "reviews.has_more"
+          },
+          {
+            "label": "reviews.items",
+            "markdownDescription": "Only `items` of `reviews`.",
+            "body": "reviews.items"
+          },
+          {
+            "label": "reviews.page",
+            "markdownDescription": "Only `page` of `reviews`.",
+            "body": "reviews.page"
+          },
+          {
+            "label": "reviews.per_page",
+            "markdownDescription": "Only `per_page` of `reviews`.",
+            "body": "reviews.per_page"
+          },
+          {
+            "label": "reviews.rating_filter",
+            "markdownDescription": "Only `rating_filter` of `reviews`.",
+            "body": "reviews.rating_filter"
+          },
+          {
+            "label": "reviews.sort",
+            "markdownDescription": "Only `sort` of `reviews`.",
+            "body": "reviews.sort"
+          },
+          {
+            "label": "reviews.stats",
+            "markdownDescription": "Only `stats` of `reviews`.",
+            "body": "reviews.stats"
+          },
+          {
+            "label": "reviews.total",
+            "markdownDescription": "Only `total` of `reviews`.",
+            "body": "reviews.total"
+          },
+          {
+            "label": "routes.account_url",
+            "markdownDescription": "Only `account_url` of `routes`.",
+            "body": "routes.account_url"
+          },
+          {
+            "label": "routes.blog_url",
+            "markdownDescription": "Only `blog_url` of `routes`.",
+            "body": "routes.blog_url"
+          },
+          {
+            "label": "routes.brands_url",
+            "markdownDescription": "Only `brands_url` of `routes`.",
+            "body": "routes.brands_url"
+          },
+          {
+            "label": "routes.cart_url",
+            "markdownDescription": "Only `cart_url` of `routes`.",
+            "body": "routes.cart_url"
+          },
+          {
+            "label": "routes.categories_url",
+            "markdownDescription": "Only `categories_url` of `routes`.",
+            "body": "routes.categories_url"
+          },
+          {
+            "label": "routes.checkout_url",
+            "markdownDescription": "Only `checkout_url` of `routes`.",
+            "body": "routes.checkout_url"
+          },
+          {
+            "label": "routes.collections_url",
+            "markdownDescription": "Only `collections_url` of `routes`.",
+            "body": "routes.collections_url"
+          },
+          {
+            "label": "routes.login_url",
+            "markdownDescription": "Only `login_url` of `routes`.",
+            "body": "routes.login_url"
+          },
+          {
+            "label": "routes.register_url",
+            "markdownDescription": "Only `register_url` of `routes`.",
+            "body": "routes.register_url"
+          },
+          {
+            "label": "routes.root_url",
+            "markdownDescription": "Only `root_url` of `routes`.",
+            "body": "routes.root_url"
+          },
+          {
+            "label": "routes.search_url",
+            "markdownDescription": "Only `search_url` of `routes`.",
+            "body": "routes.search_url"
+          },
+          {
+            "label": "routes.shop_url",
+            "markdownDescription": "Only `shop_url` of `routes`.",
+            "body": "routes.shop_url"
+          },
+          {
+            "label": "routes.vendors_url",
+            "markdownDescription": "Only `vendors_url` of `routes`.",
+            "body": "routes.vendors_url"
+          },
+          {
+            "label": "routes.wishlist_url",
+            "markdownDescription": "Only `wishlist_url` of `routes`.",
+            "body": "routes.wishlist_url"
+          },
+          {
+            "label": "search.query",
+            "markdownDescription": "Only `query` of `search`.",
+            "body": "search.query"
+          },
+          {
+            "label": "search.results",
+            "markdownDescription": "Only `results` of `search`.",
+            "body": "search.results"
+          },
+          {
+            "label": "search.totals",
+            "markdownDescription": "Only `totals` of `search`.",
+            "body": "search.totals"
+          },
+          {
+            "label": "shop.free_shipping",
+            "markdownDescription": "Only `free_shipping` of `shop`.",
+            "body": "shop.free_shipping"
+          },
+          {
+            "label": "shop.metafields",
+            "markdownDescription": "Only `metafields` of `shop`.",
+            "body": "shop.metafields"
+          },
+          {
+            "label": "shop.name",
+            "markdownDescription": "Only `name` of `shop`.",
+            "body": "shop.name"
+          },
+          {
+            "label": "shop.primary_domain",
+            "markdownDescription": "Only `primary_domain` of `shop`.",
+            "body": "shop.primary_domain"
+          },
+          {
+            "label": "store_reviews.enabled",
+            "markdownDescription": "Only `enabled` of `store_reviews`.",
+            "body": "store_reviews.enabled"
+          },
+          {
+            "label": "store_reviews.items",
+            "markdownDescription": "Only `items` of `store_reviews`.",
+            "body": "store_reviews.items"
+          },
+          {
+            "label": "store_reviews.page",
+            "markdownDescription": "Only `page` of `store_reviews`.",
+            "body": "store_reviews.page"
+          },
+          {
+            "label": "store_reviews.rating_filter",
+            "markdownDescription": "Only `rating_filter` of `store_reviews`.",
+            "body": "store_reviews.rating_filter"
+          },
+          {
+            "label": "store_reviews.sort",
+            "markdownDescription": "Only `sort` of `store_reviews`.",
+            "body": "store_reviews.sort"
+          },
+          {
+            "label": "store_reviews.stats",
+            "markdownDescription": "Only `stats` of `store_reviews`.",
+            "body": "store_reviews.stats"
+          },
+          {
+            "label": "store_reviews.total",
+            "markdownDescription": "Only `total` of `store_reviews`.",
+            "body": "store_reviews.total"
+          },
+          {
+            "label": "store_reviews.total_pages",
+            "markdownDescription": "Only `total_pages` of `store_reviews`.",
+            "body": "store_reviews.total_pages"
+          },
+          {
+            "label": "vendor.description",
+            "markdownDescription": "Only `description` of `vendor`.",
+            "body": "vendor.description"
+          },
+          {
+            "label": "vendor.id",
+            "markdownDescription": "Only `id` of `vendor`.",
+            "body": "vendor.id"
+          },
+          {
+            "label": "vendor.image",
+            "markdownDescription": "Only `image` of `vendor`.",
+            "body": "vendor.image"
+          },
+          {
+            "label": "vendor.metafields",
+            "markdownDescription": "Only `metafields` of `vendor`.",
+            "body": "vendor.metafields"
+          },
+          {
+            "label": "vendor.name",
+            "markdownDescription": "Only `name` of `vendor`.",
+            "body": "vendor.name"
+          },
+          {
+            "label": "vendor.product_count",
+            "markdownDescription": "Only `product_count` of `vendor`.",
+            "body": "vendor.product_count"
+          },
+          {
+            "label": "vendor.seo_description",
+            "markdownDescription": "Only `seo_description` of `vendor`.",
+            "body": "vendor.seo_description"
+          },
+          {
+            "label": "vendor.seo_title",
+            "markdownDescription": "Only `seo_title` of `vendor`.",
+            "body": "vendor.seo_title"
+          },
+          {
+            "label": "vendor.slug",
+            "markdownDescription": "Only `slug` of `vendor`.",
+            "body": "vendor.slug"
+          },
+          {
+            "label": "vendor.url",
+            "markdownDescription": "Only `url` of `vendor`.",
+            "body": "vendor.url"
+          },
+          {
+            "label": "wishlist.enabled",
+            "markdownDescription": "Only `enabled` of `wishlist`.",
+            "body": "wishlist.enabled"
+          },
+          {
+            "label": "wishlist.id",
+            "markdownDescription": "Only `id` of `wishlist`.",
+            "body": "wishlist.id"
+          },
+          {
+            "label": "wishlist.item_count",
+            "markdownDescription": "Only `item_count` of `wishlist`.",
+            "body": "wishlist.item_count"
+          },
+          {
+            "label": "wishlist.items",
+            "markdownDescription": "Only `items` of `wishlist`.",
+            "body": "wishlist.items"
+          },
+          {
+            "label": "wishlist.login_required",
+            "markdownDescription": "Only `login_required` of `wishlist`.",
+            "body": "wishlist.login_required"
+          }
+        ]
+      }
+    },
+    "settings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/setting"
+      },
+      "markdownDescription": "The section's settings.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema#settings)"
+    },
+    "blocks": {
+      "$ref": "#/definitions/blocks"
+    },
+    "presets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/preset"
+      },
+      "markdownDescription": "Ready-made versions of the section offered when a merchant adds one.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema#presets)"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "block"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "target"
+              ]
+            },
+            {
+              "required": [
+                "presets"
+              ]
+            }
+          ]
+        },
+        "properties": {
+          "blocks": {
+            "not": {
+              "required": [
+                "types"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "layout",
+              "embed"
+            ]
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "target"
+        ]
+      }
+    }
+  ],
+  "definitions": {
+    "setting": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "markdownDescription": "Unique in the section. The template reads `settings.<id>`."
+        },
+        "type": {
+          "enum": [
+            "blog_category",
+            "blog_post",
+            "brand",
+            "category",
+            "checkbox",
+            "collection",
+            "collection_list",
+            "color",
+            "color_scheme",
+            "image",
+            "menu",
+            "number",
+            "object",
+            "page",
+            "policy",
+            "product",
+            "product_list",
+            "range",
+            "richtext",
+            "select",
+            "text",
+            "textarea",
+            "url",
+            "vascula",
+            "vendor",
+            "video"
+          ],
+          "markdownEnumDescriptions": [
+            "Search and pick one blog category. The template reads the item, or nothing if it was deleted.",
+            "Search and pick one blog post. The template reads the item, or nothing if it was deleted.",
+            "Search and pick one brand. The template reads the item, or nothing if it was deleted.",
+            "Search and pick one category. The template reads the item, or nothing if it was deleted.",
+            "Toggle. The template reads `true` or `false`.",
+            "Search and pick one collection. The template reads the item, or nothing if it was deleted.",
+            "Pick and order several collections, up to `max`. The template reads a list of the picked items.",
+            "Colour picker. The template reads a hex colour.",
+            "One of the theme's colour schemes. The template reads the scheme's id.",
+            "Image from the media library. The template reads an image URL; use `image_url`.",
+            "Menu picker. The template reads the menu from `settings.<id>_resolved`.",
+            "Number input. The template reads a number.",
+            "A group of the declared `fields`. The template reads an object of field values.",
+            "Search and pick one page. The template reads the item, or nothing if it was deleted.",
+            "Search and pick one policy. The template reads the item, or nothing if it was deleted.",
+            "Search and pick one product. The template reads the item, or nothing if it was deleted.",
+            "Pick and order several products, up to `max`. The template reads a list of the picked items.",
+            "Slider. Needs `min` and `max`; `step` and `unit` are optional. The template reads a number.",
+            "Rich text editor. The template reads formatted HTML, cleaned of anything unsafe.",
+            "Drop-down. Needs `options`. The template reads the chosen option's `value`.",
+            "Single-line text. The template reads text.",
+            "Multi-line text. The template reads text.",
+            "Link. The template reads a URL.",
+            "Code editor. The template reads the rendered output of the merchant's Vascula code.",
+            "Search and pick one vendor. The template reads the item, or nothing if it was deleted.",
+            "Video from the media library. The template reads a video URL."
+          ],
+          "markdownDescription": "The setting type, which decides the editor control.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema#setting-types)"
+        },
+        "default": {
+          "description": "The value a new section starts with."
+        },
+        "editor": {
+          "type": "object",
+          "markdownDescription": "`label` and optional `group`. A setting without `editor` is not shown to merchants. Both can be literal text or keys from `locales/<locale>.schema.json` (`fieldLabel.<label>`, `fieldGroup.<group>`).",
+          "properties": {
+            "label": {
+              "type": "string",
+              "description": "The setting's label in the theme editor."
+            },
+            "group": {
+              "type": "string",
+              "description": "The editor group the setting appears in."
+            }
+          },
+          "additionalProperties": false
+        },
+        "options": {
+          "type": "array",
+          "markdownDescription": "For `select`: the choices.",
+          "items": {
+            "type": "object",
+            "required": [
+              "value",
+              "label"
+            ],
+            "properties": {
+              "value": {
+                "description": "The value the template reads."
+              },
+              "label": {
+                "type": "string",
+                "description": "The label merchants see."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "fields": {
+          "type": "array",
+          "markdownDescription": "For `object`: the fields of the value, each with a unique `key`.",
+          "items": {
+            "$ref": "#/definitions/objectField"
+          }
+        },
+        "min": {
+          "type": "number",
+          "markdownDescription": "For `range` (required) and `number`: the lowest value."
+        },
+        "max": {
+          "type": "number",
+          "markdownDescription": "For `range` (required) and `number`: the highest value. For `product_list` and `collection_list`: the most items (12 if not set)."
+        },
+        "step": {
+          "type": "number",
+          "markdownDescription": "For `range`: the step between values."
+        },
+        "unit": {
+          "type": "string",
+          "markdownDescription": "For `range`: the unit shown after the value, such as `px`."
+        },
+        "visible_if": {
+          "type": "object",
+          "markdownDescription": "Show the setting only when another setting has one of the given values.",
+          "required": [
+            "setting",
+            "values"
+          ],
+          "properties": {
+            "setting": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The id of the other setting."
+            },
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "description": "The values that show this setting."
+            }
+          },
+          "defaultSnippets": [
+            {
+              "body": {
+                "setting": "$1",
+                "values": [
+                  "$2"
+                ]
+              }
+            }
+          ],
+          "additionalProperties": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "range"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "min",
+              "max"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "select"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "options"
+            ],
+            "properties": {
+              "options": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "object"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "fields"
+            ],
+            "properties": {
+              "fields": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "defaultSnippets": [
+        {
+          "label": "setting",
+          "body": {
+            "id": "$1",
+            "type": "${2:text}",
+            "default": "$3",
+            "editor": {
+              "label": "$4",
+              "group": "${5:content}"
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "objectField": {
+      "type": "object",
+      "required": [
+        "key",
+        "type"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The field's key in the object value."
+        },
+        "label": {
+          "type": "string",
+          "description": "The field's editor label."
+        },
+        "type": {
+          "enum": [
+            "blog_category",
+            "blog_post",
+            "brand",
+            "category",
+            "checkbox",
+            "collection",
+            "collection_list",
+            "color",
+            "color_scheme",
+            "image",
+            "menu",
+            "number",
+            "object",
+            "page",
+            "policy",
+            "product",
+            "product_list",
+            "range",
+            "richtext",
+            "select",
+            "text",
+            "textarea",
+            "url",
+            "vascula",
+            "vendor",
+            "video"
+          ],
+          "markdownEnumDescriptions": [
+            "Search and pick one blog category. The template reads the item, or nothing if it was deleted.",
+            "Search and pick one blog post. The template reads the item, or nothing if it was deleted.",
+            "Search and pick one brand. The template reads the item, or nothing if it was deleted.",
+            "Search and pick one category. The template reads the item, or nothing if it was deleted.",
+            "Toggle. The template reads `true` or `false`.",
+            "Search and pick one collection. The template reads the item, or nothing if it was deleted.",
+            "Pick and order several collections, up to `max`. The template reads a list of the picked items.",
+            "Colour picker. The template reads a hex colour.",
+            "One of the theme's colour schemes. The template reads the scheme's id.",
+            "Image from the media library. The template reads an image URL; use `image_url`.",
+            "Menu picker. The template reads the menu from `settings.<id>_resolved`.",
+            "Number input. The template reads a number.",
+            "A group of the declared `fields`. The template reads an object of field values.",
+            "Search and pick one page. The template reads the item, or nothing if it was deleted.",
+            "Search and pick one policy. The template reads the item, or nothing if it was deleted.",
+            "Search and pick one product. The template reads the item, or nothing if it was deleted.",
+            "Pick and order several products, up to `max`. The template reads a list of the picked items.",
+            "Slider. Needs `min` and `max`; `step` and `unit` are optional. The template reads a number.",
+            "Rich text editor. The template reads formatted HTML, cleaned of anything unsafe.",
+            "Drop-down. Needs `options`. The template reads the chosen option's `value`.",
+            "Single-line text. The template reads text.",
+            "Multi-line text. The template reads text.",
+            "Link. The template reads a URL.",
+            "Code editor. The template reads the rendered output of the merchant's Vascula code.",
+            "Search and pick one vendor. The template reads the item, or nothing if it was deleted.",
+            "Video from the media library. The template reads a video URL."
+          ],
+          "markdownDescription": "The setting type, which decides the editor control.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema#setting-types)"
+        },
+        "default": {
+          "description": "The value a new section starts with."
+        },
+        "editor": {
+          "type": "object",
+          "markdownDescription": "`label` and optional `group`. A setting without `editor` is not shown to merchants. Both can be literal text or keys from `locales/<locale>.schema.json` (`fieldLabel.<label>`, `fieldGroup.<group>`).",
+          "properties": {
+            "label": {
+              "type": "string",
+              "description": "The setting's label in the theme editor."
+            },
+            "group": {
+              "type": "string",
+              "description": "The editor group the setting appears in."
+            }
+          },
+          "additionalProperties": false
+        },
+        "options": {
+          "type": "array",
+          "markdownDescription": "For `select`: the choices.",
+          "items": {
+            "type": "object",
+            "required": [
+              "value",
+              "label"
+            ],
+            "properties": {
+              "value": {
+                "description": "The value the template reads."
+              },
+              "label": {
+                "type": "string",
+                "description": "The label merchants see."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "fields": {
+          "type": "array",
+          "markdownDescription": "For `object`: the fields of the value, each with a unique `key`.",
+          "items": {
+            "$ref": "#/definitions/objectField"
+          }
+        },
+        "min": {
+          "type": "number",
+          "markdownDescription": "For `range` (required) and `number`: the lowest value."
+        },
+        "max": {
+          "type": "number",
+          "markdownDescription": "For `range` (required) and `number`: the highest value. For `product_list` and `collection_list`: the most items (12 if not set)."
+        },
+        "step": {
+          "type": "number",
+          "markdownDescription": "For `range`: the step between values."
+        },
+        "unit": {
+          "type": "string",
+          "markdownDescription": "For `range`: the unit shown after the value, such as `px`."
+        },
+        "visible_if": {
+          "type": "object",
+          "markdownDescription": "Show the setting only when another setting has one of the given values.",
+          "required": [
+            "setting",
+            "values"
+          ],
+          "properties": {
+            "setting": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The id of the other setting."
+            },
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "description": "The values that show this setting."
+            }
+          },
+          "defaultSnippets": [
+            {
+              "body": {
+                "setting": "$1",
+                "values": [
+                  "$2"
+                ]
+              }
+            }
+          ],
+          "additionalProperties": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "range"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "min",
+              "max"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "select"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "options"
+            ],
+            "properties": {
+              "options": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "object"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "fields"
+            ],
+            "properties": {
+              "fields": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "defaultSnippets": [
+        {
+          "label": "field",
+          "body": {
+            "key": "$1",
+            "type": "${2:text}",
+            "label": "$3"
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "blocks": {
+      "type": "object",
+      "markdownDescription": "The blocks the section accepts.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema#blocks)",
+      "properties": {
+        "types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/blockType"
+          },
+          "description": "The block types this section defines."
+        },
+        "default": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The blocks a newly added section starts with. Every type must be declared."
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The most blocks a merchant can add. Omit for no limit."
+        },
+        "accept_theme_blocks": {
+          "type": "boolean",
+          "markdownDescription": "Accept the theme's shared theme blocks (`blocks/<name>.vasc`), stored as `theme:<name>`. Place `{% blocks %}` where they render. Blocks nest up to 4 levels.\n\n[Documentation](https://dev-docs.tringify.com/themes/theme-blocks)"
+        },
+        "accept_app_blocks": {
+          "type": "boolean",
+          "description": "Accept blocks from the merchant's installed apps."
+        }
+      },
+      "additionalProperties": false
+    },
+    "blockType": {
+      "type": "object",
+      "required": [
+        "type",
+        "settings"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The block type. Unique in the section."
+        },
+        "editor": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string",
+              "description": "The block's name in the theme editor."
+            }
+          },
+          "additionalProperties": false
+        },
+        "settings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/setting"
+          },
+          "description": "The block's settings.",
+          "minItems": 1
+        }
+      },
+      "defaultSnippets": [
+        {
+          "label": "block type",
+          "body": {
+            "type": "$1",
+            "editor": {
+              "label": "$2"
+            },
+            "settings": [
+              {
+                "id": "$3",
+                "type": "${4:text}",
+                "default": "$5",
+                "editor": {
+                  "label": "$6",
+                  "group": "content"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "preset": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The preset's name in the editor's \"Add section\" list."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category the preset is listed under."
+        },
+        "settings": {
+          "type": "object",
+          "description": "Values for declared settings."
+        },
+        "blocks": {
+          "type": "array",
+          "description": "Starting blocks: declared block types, or theme:<name> when the section accepts theme blocks.",
+          "items": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "settings": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

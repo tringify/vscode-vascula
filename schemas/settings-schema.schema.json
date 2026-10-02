@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/tringify/vscode-vascula/schemas/settings-schema.schema.json",
+  "title": "Tringify global theme settings",
+  "description": "Global theme settings, config/settings_schema.json.",
+  "type": [
+    "object",
+    "array"
+  ],
+  "if": {
+    "type": "object",
+    "required": [
+      "settings"
+    ]
+  },
+  "then": {
+    "properties": {
+      "schema_version": {
+        "type": "integer",
+        "description": "The settings schema version."
+      },
+      "settings": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "type"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The template reads settings.<id> in theme tokens and sections."
+            },
+            "type": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "blog_category",
+                    "blog_post",
+                    "brand",
+                    "category",
+                    "checkbox",
+                    "collection",
+                    "collection_list",
+                    "color",
+                    "color_scheme",
+                    "image",
+                    "menu",
+                    "number",
+                    "object",
+                    "page",
+                    "policy",
+                    "product",
+                    "product_list",
+                    "range",
+                    "richtext",
+                    "select",
+                    "text",
+                    "textarea",
+                    "url",
+                    "vascula",
+                    "vendor",
+                    "video",
+                    "color_scheme_group",
+                    "font_picker"
+                  ],
+                  "markdownEnumDescriptions": [
+                    "Search and pick one blog category. The template reads the item, or nothing if it was deleted.",
+                    "Search and pick one blog post. The template reads the item, or nothing if it was deleted.",
+                    "Search and pick one brand. The template reads the item, or nothing if it was deleted.",
+                    "Search and pick one category. The template reads the item, or nothing if it was deleted.",
+                    "Toggle. The template reads `true` or `false`.",
+                    "Search and pick one collection. The template reads the item, or nothing if it was deleted.",
+                    "Pick and order several collections, up to `max`. The template reads a list of the picked items.",
+                    "Colour picker. The template reads a hex colour.",
+                    "One of the theme's colour schemes. The template reads the scheme's id.",
+                    "Image from the media library. The template reads an image URL; use `image_url`.",
+                    "Menu picker. The template reads the menu from `settings.<id>_resolved`.",
+                    "Number input. The template reads a number.",
+                    "A group of the declared `fields`. The template reads an object of field values.",
+                    "Search and pick one page. The template reads the item, or nothing if it was deleted.",
+                    "Search and pick one policy. The template reads the item, or nothing if it was deleted.",
+                    "Search and pick one product. The template reads the item, or nothing if it was deleted.",
+                    "Pick and order several products, up to `max`. The template reads a list of the picked items.",
+                    "Slider. Needs `min` and `max`; `step` and `unit` are optional. The template reads a number.",
+                    "Rich text editor. The template reads formatted HTML, cleaned of anything unsafe.",
+                    "Drop-down. Needs `options`. The template reads the chosen option's `value`.",
+                    "Single-line text. The template reads text.",
+                    "Multi-line text. The template reads text.",
+                    "Link. The template reads a URL.",
+                    "Code editor. The template reads the rendered output of the merchant's Vascula code.",
+                    "Search and pick one vendor. The template reads the item, or nothing if it was deleted.",
+                    "Video from the media library. The template reads a video URL.",
+                    "The theme's colour schemes: a list of schemes with an `id`, `label` and `colors`, described by `fields`.",
+                    "A font from the platform's font list."
+                  ]
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "default": {},
+            "editor": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "group": {
+                  "type": "string"
+                }
+              }
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "value",
+                  "label"
+                ],
+                "properties": {
+                  "value": {},
+                  "label": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "range"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "required": [
+                  "min",
+                  "max"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/tringify/vscode-vascula/schemas/template.schema.json",
+  "title": "Tringify theme template",
+  "markdownDescription": "A surface's starting composition, `templates/<surface>.json`.\n\n[Documentation](https://dev-docs.tringify.com/themes/templates-and-surfaces)",
+  "type": "object",
+  "properties": {
+    "page_type": {
+      "markdownDescription": "The surface key. Must match the file name."
+    }
+  },
+  "if": {
+    "required": [
+      "page_type"
+    ]
+  },
+  "then": {
+    "required": [
+      "page_type",
+      "sections"
+    ],
+    "properties": {
+      "page_type": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*(__[A-Za-z0-9][A-Za-z0-9_-]*)?$",
+        "errorMessage": "page_type is a surface key, such as product, or <surface>__<name> for an alternate template. It matches the file name.",
+        "defaultSnippets": [
+          {
+            "label": "home",
+            "markdownDescription": "The `home` page.",
+            "body": "home"
+          },
+          {
+            "label": "shop",
+            "markdownDescription": "The `shop` page.",
+            "body": "shop"
+          },
+          {
+            "label": "product",
+            "markdownDescription": "The `product` page.",
+            "body": "product"
+          },
+          {
+            "label": "collection",
+            "markdownDescription": "The `collection` page.",
+            "body": "collection"
+          },
+          {
+            "label": "collection_list",
+            "markdownDescription": "The `collection_list` page.",
+            "body": "collection_list"
+          },
+          {
+            "label": "category",
+            "markdownDescription": "The `category` page.",
+            "body": "category"
+          },
+          {
+            "label": "category_list",
+            "markdownDescription": "The `category_list` page.",
+            "body": "category_list"
+          },
+          {
+            "label": "page",
+            "markdownDescription": "The `page` page.",
+            "body": "page"
+          },
+          {
+            "label": "policy",
+            "markdownDescription": "The `policy` page.",
+            "body": "policy"
+          },
+          {
+            "label": "blog",
+            "markdownDescription": "The `blog` page.",
+            "body": "blog"
+          },
+          {
+            "label": "blog_list",
+            "markdownDescription": "The `blog_list` page.",
+            "body": "blog_list"
+          },
+          {
+            "label": "blog_category",
+            "markdownDescription": "The `blog_category` page.",
+            "body": "blog_category"
+          },
+          {
+            "label": "vendor",
+            "markdownDescription": "The `vendor` page.",
+            "body": "vendor"
+          },
+          {
+            "label": "vendor_list",
+            "markdownDescription": "The `vendor_list` page.",
+            "body": "vendor_list"
+          },
+          {
+            "label": "brand",
+            "markdownDescription": "The `brand` page.",
+            "body": "brand"
+          },
+          {
+            "label": "brand_list",
+            "markdownDescription": "The `brand_list` page.",
+            "body": "brand_list"
+          },
+          {
+            "label": "search",
+            "markdownDescription": "The `search` page.",
+            "body": "search"
+          },
+          {
+            "label": "cart",
+            "markdownDescription": "The `cart` page.",
+            "body": "cart"
+          },
+          {
+            "label": "wishlist",
+            "markdownDescription": "The `wishlist` page.",
+            "body": "wishlist"
+          },
+          {
+            "label": "track_order",
+            "markdownDescription": "The `track_order` page.",
+            "body": "track_order"
+          },
+          {
+            "label": "account",
+            "markdownDescription": "The `account` page.",
+            "body": "account"
+          },
+          {
+            "label": "login",
+            "markdownDescription": "The `login` page.",
+            "body": "login"
+          },
+          {
+            "label": "register",
+            "markdownDescription": "The `register` page.",
+            "body": "register"
+          },
+          {
+            "label": "not_found",
+            "markdownDescription": "The `not_found` page.",
+            "body": "not_found"
+          },
+          {
+            "label": "coming_soon",
+            "markdownDescription": "The `coming_soon` page.",
+            "body": "coming_soon"
+          },
+          {
+            "label": "maintenance",
+            "markdownDescription": "The `maintenance` page.",
+            "body": "maintenance"
+          },
+          {
+            "label": "password",
+            "markdownDescription": "The `password` page.",
+            "body": "password"
+          },
+          {
+            "label": "unavailable",
+            "markdownDescription": "The `unavailable` page.",
+            "body": "unavailable"
+          },
+          {
+            "label": "global_body_start",
+            "markdownDescription": "Global surface `global_body_start`.",
+            "body": "global_body_start"
+          },
+          {
+            "label": "global_body_end",
+            "markdownDescription": "Global surface `global_body_end`.",
+            "body": "global_body_end"
+          },
+          {
+            "label": "global_overlay",
+            "markdownDescription": "Global surface `global_overlay`.",
+            "body": "global_overlay"
+          }
+        ]
+      },
+      "name": {
+        "type": "string",
+        "description": "The alternate template's name in the template picker."
+      },
+      "sections": {
+        "type": "array",
+        "description": "The ordered section instances.",
+        "items": {
+          "type": "object",
+          "required": [
+            "type",
+            "position"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The section's name."
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Zero or greater, unique in the template."
+            },
+            "settings": {
+              "type": "object",
+              "description": "Values that differ from the schema defaults. A section with blocks carries settings.blocks.",
+              "properties": {
+                "blocks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "type"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "A stable id you choose."
+                      },
+                      "type": {
+                        "type": "string",
+                        "markdownDescription": "A declared block type, `theme:<name>` for a theme block, or `app:<app>:<key>` for an app block."
+                      },
+                      "settings": {
+                        "type": "object"
+                      },
+                      "disabled": {
+                        "type": "boolean",
+                        "description": "Hidden by the merchant."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "disabled": {
+              "type": "boolean"
+            }
+          },
+          "defaultSnippets": [
+            {
+              "body": {
+                "type": "$1",
+                "position": "^${2:0}",
+                "settings": {}
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+name: Theme contract
+
+# Fails when the latest theme tools release prints a different author contract,
+# so the schemas can be regenerated.
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch theme tools
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download -R tringify/theme-tools -p 'tringify-theme-tools-linux-amd64.zip' -p SHA256SUMS -D /tmp/tt
+          (cd /tmp/tt && sha256sum -c SHA256SUMS --ignore-missing)
+          unzip -q /tmp/tt/tringify-theme-tools-linux-amd64.zip -d /tmp/tt
+      - name: Compare the contract
+        run: |
+          /tmp/tt/tringify-theme-tools/tringify-theme contract > /tmp/contract.json
+          node scripts/generate.mjs --check --contract /tmp/contract.json --source "$(node -p 'require("./data/contract.json").source')"

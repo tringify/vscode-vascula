@@ -1,0 +1,98 @@
+## SYNTAX TEST "text.html.vascula" "output, tags, filters and comments"
+   <p>{{ product.title | upcase }}</p>
+##    ^^ punctuation.section.embedded.begin.vascula
+##       ^^^^^^^ variable.other.vascula
+##              ^ punctuation.accessor.vascula
+##                     ^ punctuation.separator.filter.vascula
+##                       ^^^^^^ support.function.filter.vascula
+##                              ^^ punctuation.section.embedded.end.vascula
+##                                ^^^^ meta.tag.structure.p.end.html
+   {%- if settings.show and cart.item_count > 0 -%}
+## ^^^ punctuation.section.embedded.begin.vascula
+##     ^^ keyword.control.vascula
+##        ^^^^^^^^ variable.language.vascula
+##                      ^^^ keyword.operator.logical.vascula
+##                                          ^ keyword.operator.comparison.vascula
+##                                            ^ constant.numeric.vascula
+##                                              ^^^ punctuation.section.embedded.end.vascula
+   {% elsif x == "a\"b" or y contains 'z' %}
+##    ^^^^^ keyword.control.vascula
+##            ^^ keyword.operator.comparison.vascula
+##               ^^^^^^ string.quoted.double.vascula
+##                 ^^ constant.character.escape.vascula
+##                      ^^ keyword.operator.logical.vascula
+##                           ^^^^^^^^ keyword.operator.word.vascula
+##                                    ^^^ string.quoted.single.vascula
+   {% else %}{% endif %}
+##    ^^^^ keyword.control.vascula
+##              ^^^^^ keyword.control.vascula
+   {% for p in products.items limit: 4 reversed %}{% break %}{% continue %}{% endfor %}
+##    ^^^ keyword.control.vascula
+##          ^^ keyword.other.vascula
+##                            ^^^^^ variable.parameter.vascula
+##                                 ^ punctuation.separator.key-value.vascula
+##                                     ^^^^^^^^ keyword.other.vascula
+##                                                   ^^^^^ keyword.control.vascula
+##                                                              ^^^^^^^^ keyword.control.vascula
+##                                                                            ^^^^^^ keyword.control.vascula
+   {% for n in (1..3) %}{% cycle "odd", "even" %}{% endfor %}
+##             ^ punctuation.section.parens.vascula
+##              ^ constant.numeric.vascula
+##               ^^ keyword.operator.range.vascula
+##                 ^ constant.numeric.vascula
+##                         ^^^^^ keyword.control.vascula
+##                                    ^ punctuation.separator.vascula
+   {% assign total = price | times: 2.5 | round: 2 %}
+##    ^^^^^^ storage.type.vascula
+##                 ^ keyword.operator.assignment.vascula
+##                                  ^^^ constant.numeric.vascula
+   {% capture note %}x{% endcapture %}{% unless a %}{% endunless %}
+##    ^^^^^^^ storage.type.vascula
+##                       ^^^^^^^^^^ storage.type.vascula
+##                                       ^^^^^^ keyword.control.vascula
+##                                                     ^^^^^^^^^ keyword.control.vascula
+   {% case kind %}{% when "a", "b" %}{% endcase %}
+##    ^^^^ keyword.control.vascula
+##                   ^^^^ keyword.control.vascula
+##                                      ^^^^^^^ keyword.control.vascula
+   {% render "card", item: p %}{% form 'cart_add', class: 'buy' %}{% endform %}{% blocks %}
+##    ^^^^^^ keyword.other.tag.vascula
+##                   ^^^^ variable.parameter.vascula
+##                                ^^^^ keyword.other.tag.vascula
+##                                     ^^^^^^^^^^ string.quoted.single.vascula
+##                                                 ^^^^^ variable.parameter.vascula
+##                                                                   ^^^^^^^ keyword.other.tag.vascula
+##                                                                                ^^^^^^ keyword.other.tag.vascula
+   {% app_helper x %}
+##    ^^^^^^^^^^ entity.name.tag.vascula
+##               ^ variable.other.vascula
+   {{ nil }}{{ true }}{{ empty }}{{ blank }}{{ forloop.index }}
+##    ^^^ constant.language.vascula
+##             ^^^^ constant.language.vascula
+##                       ^^^^^ constant.language.vascula
+##                                  ^^^^^ constant.language.vascula
+##                                             ^^^^^^^ variable.language.vascula
+   {{- -1 -}}
+## ^^^ punctuation.section.embedded.begin.vascula
+##     ^^ constant.numeric.vascula
+##        ^^^ punctuation.section.embedded.end.vascula
+   {# a comment {{ not output }} #}after
+## ^^ punctuation.definition.comment.begin.vascula
+##              ^^^^^^^^^^^^^^^^ comment.block.vascula
+##              ^^ - punctuation.section.embedded.begin.vascula
+##                               ^^ punctuation.definition.comment.end.vascula
+##                                 ^^^^^ - comment
+   {#- trimmed -#}
+## ^^^ punctuation.definition.comment.begin.vascula
+##             ^^^ punctuation.definition.comment.end.vascula
+   {%- comment -%}{% if broken %}{%- endcomment -%}after
+## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment.block.vascula
+##                   ^^ - keyword.control.vascula
+##                                                 ^^^^^ - comment
+   {{ "a" | t: name: customer.first_name }}
+##          ^ support.function.filter.vascula
+##             ^^^^ variable.parameter.vascula
+   {{ product.price.current | money: isolate: true }}
+##                            ^^^^^ support.function.filter.vascula
+##                                   ^^^^^^^ variable.parameter.vascula
+##                                            ^^^^ constant.language.vascula

@@ -1,0 +1,327 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Vascula",
+  "scopeName": "text.html.vascula",
+  "fileTypes": [
+    "vasc"
+  ],
+  "patterns": [
+    {
+      "include": "#markup"
+    },
+    {
+      "include": "text.html.derivative"
+    }
+  ],
+  "injections": {
+    "L:text.html.vascula - (meta.embedded.block.schema.vascula | comment.block.vascula | meta.output.vascula | meta.tag.vascula)": {
+      "patterns": [
+        {
+          "include": "#markup"
+        }
+      ]
+    }
+  },
+  "repository": {
+    "markup": {
+      "patterns": [
+        {
+          "include": "#comment-tag"
+        },
+        {
+          "include": "#schema-tag"
+        },
+        {
+          "include": "#inline-comment"
+        },
+        {
+          "include": "#output"
+        },
+        {
+          "include": "#tag"
+        }
+      ]
+    },
+    "inline-comment": {
+      "name": "comment.block.vascula",
+      "begin": "\\{#-?",
+      "end": "-?#\\}",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.comment.begin.vascula"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.comment.end.vascula"
+        }
+      }
+    },
+    "comment-tag": {
+      "name": "comment.block.vascula",
+      "begin": "(\\{%-?)\\s*(comment)\\s*(-?%\\})",
+      "end": "(\\{%-?)\\s*(endcomment)\\s*(-?%\\})",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.comment.begin.vascula"
+        },
+        "2": {
+          "name": "keyword.other.comment.vascula"
+        },
+        "3": {
+          "name": "punctuation.definition.comment.begin.vascula"
+        }
+      },
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.comment.end.vascula"
+        },
+        "2": {
+          "name": "keyword.other.comment.vascula"
+        },
+        "3": {
+          "name": "punctuation.definition.comment.end.vascula"
+        }
+      }
+    },
+    "schema-tag": {
+      "name": "meta.embedded.block.schema.vascula",
+      "contentName": "source.json",
+      "begin": "(\\{%-?)\\s*(schema)\\s*(-?%\\})",
+      "end": "(\\{%-?)\\s*(endschema)\\s*(-?%\\})",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.section.embedded.begin.vascula"
+        },
+        "2": {
+          "name": "keyword.other.schema.vascula"
+        },
+        "3": {
+          "name": "punctuation.section.embedded.end.vascula"
+        }
+      },
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.section.embedded.begin.vascula"
+        },
+        "2": {
+          "name": "keyword.other.schema.vascula"
+        },
+        "3": {
+          "name": "punctuation.section.embedded.end.vascula"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.json"
+        }
+      ]
+    },
+    "output": {
+      "name": "meta.output.vascula",
+      "begin": "\\{\\{-?",
+      "end": "-?\\}\\}",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.embedded.begin.vascula"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.embedded.end.vascula"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "tag": {
+      "name": "meta.tag.vascula",
+      "begin": "\\{%-?\\s*",
+      "end": "-?%\\}",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.embedded.begin.vascula"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.embedded.end.vascula"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#tag-name"
+        },
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "tag-name": {
+      "patterns": [
+        {
+          "match": "\\G(if|elsif|else|endif|unless|endunless|case|when|endcase|for|endfor|break|continue|cycle)\\b",
+          "name": "keyword.control.vascula"
+        },
+        {
+          "match": "\\G(assign|capture|endcapture)\\b",
+          "name": "storage.type.vascula"
+        },
+        {
+          "match": "\\G(render|form|endform|blocks|comment|endcomment|schema|endschema)\\b",
+          "name": "keyword.other.tag.vascula"
+        },
+        {
+          "match": "\\G[A-Za-z_][A-Za-z0-9_]*",
+          "name": "entity.name.tag.vascula"
+        }
+      ]
+    },
+    "expression": {
+      "patterns": [
+        {
+          "include": "#string-double"
+        },
+        {
+          "include": "#string-single"
+        },
+        {
+          "include": "#filter"
+        },
+        {
+          "include": "#named-argument"
+        },
+        {
+          "match": "\\.\\.",
+          "name": "keyword.operator.range.vascula"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_])-?[0-9]+(?:\\.[0-9]+)?(?![A-Za-z_])",
+          "name": "constant.numeric.vascula"
+        },
+        {
+          "match": "\\b(true|false|nil|null|empty|blank)\\b",
+          "name": "constant.language.vascula"
+        },
+        {
+          "match": "==|!=|<=|>=|<|>",
+          "name": "keyword.operator.comparison.vascula"
+        },
+        {
+          "match": "\\b(contains)\\b",
+          "name": "keyword.operator.word.vascula"
+        },
+        {
+          "match": "\\b(and|or)\\b",
+          "name": "keyword.operator.logical.vascula"
+        },
+        {
+          "match": "\\b(in|reversed)\\b",
+          "name": "keyword.other.vascula"
+        },
+        {
+          "match": "=",
+          "name": "keyword.operator.assignment.vascula"
+        },
+        {
+          "match": ",",
+          "name": "punctuation.separator.vascula"
+        },
+        {
+          "match": ":",
+          "name": "punctuation.separator.key-value.vascula"
+        },
+        {
+          "match": "\\.",
+          "name": "punctuation.accessor.vascula"
+        },
+        {
+          "match": "[\\[\\]]",
+          "name": "punctuation.section.brackets.vascula"
+        },
+        {
+          "match": "[()]",
+          "name": "punctuation.section.parens.vascula"
+        },
+        {
+          "match": "\\b(settings|forloop)\\b",
+          "name": "variable.language.vascula"
+        },
+        {
+          "match": "[A-Za-z_][A-Za-z0-9_]*",
+          "name": "variable.other.vascula"
+        }
+      ]
+    },
+    "filter": {
+      "match": "(\\|)\\s*([A-Za-z_][A-Za-z0-9_]*)(?:\\s*(:))?",
+      "captures": {
+        "1": {
+          "name": "punctuation.separator.filter.vascula"
+        },
+        "2": {
+          "name": "support.function.filter.vascula"
+        },
+        "3": {
+          "name": "punctuation.separator.arguments.vascula"
+        }
+      }
+    },
+    "named-argument": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\s*(:)",
+      "captures": {
+        "1": {
+          "name": "variable.parameter.vascula"
+        },
+        "2": {
+          "name": "punctuation.separator.key-value.vascula"
+        }
+      }
+    },
+    "string-double": {
+      "name": "string.quoted.double.vascula",
+      "begin": "\"",
+      "end": "\"",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.vascula"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.vascula"
+        }
+      },
+      "patterns": [
+        {
+          "match": "\\\\.",
+          "name": "constant.character.escape.vascula"
+        }
+      ]
+    },
+    "string-single": {
+      "name": "string.quoted.single.vascula",
+      "begin": "'",
+      "end": "'",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.vascula"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.vascula"
+        }
+      },
+      "patterns": [
+        {
+          "match": "\\\\.",
+          "name": "constant.character.escape.vascula"
+        }
+      ]
+    }
+  }
+}
