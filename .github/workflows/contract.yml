@@ -18,17 +18,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Fetch theme tools
+      - name: Print the contract
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download -R tringify/theme-tools -p 'tringify-theme-tools-linux-amd64.zip' -p SHA256SUMS -D /tmp/tt
-          (cd /tmp/tt && sha256sum -c SHA256SUMS --ignore-missing)
-          unzip -q /tmp/tt/tringify-theme-tools-linux-amd64.zip -d /tmp/tt
+          # Prefer the Tringify CLI; fall back to the theme tools' Python command.
+          if curl -fsSL https://raw.githubusercontent.com/tringify/cli/main/install.sh | TRINGIFY_CLI_BIN=/tmp/bin sh &&
+            /tmp/bin/tringify theme contract > /tmp/contract.json; then
+            echo "Printed with the Tringify CLI"
+          else
+            gh release download -R tringify/theme-tools -p 'tringify-theme-tools-linux-amd64.zip' -p SHA256SUMS -D /tmp/tt
+            (cd /tmp/tt && sha256sum -c SHA256SUMS --ignore-missing)
+            unzip -q /tmp/tt/tringify-theme-tools-linux-amd64.zip -d /tmp/tt
+            /tmp/tt/tringify-theme-tools/tringify-theme contract > /tmp/contract.json
+          fi
       - name: Compare the contract
-        run: |
-          /tmp/tt/tringify-theme-tools/tringify-theme contract > /tmp/contract.json
-          node scripts/generate.mjs --check --contract /tmp/contract.json --source "$(node -p 'require("./data/contract.json").source')"
+        run: node scripts/generate.mjs --check --contract /tmp/contract.json --source "$(node -p 'require("./data/contract.json").source')"

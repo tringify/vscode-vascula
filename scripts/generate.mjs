@@ -2,10 +2,11 @@
 // Generates the theme-file JSON schemas from the theme author contract.
 //
 //   node scripts/generate.mjs                     regenerate schemas from data/contract.json
-//   node scripts/generate.mjs --contract FILE     import `tringify-theme contract` output first
+//   node scripts/generate.mjs --contract FILE     import `tringify theme contract` output first
 //   node scripts/generate.mjs --check             fail if any generated file is out of date
 //
-// The contract comes from https://github.com/tringify/theme-tools (`tringify-theme contract`).
+// The contract comes from the Tringify CLI (`tringify theme contract`, https://github.com/tringify/cli),
+// or the theme tools' `tringify-theme contract` (https://github.com/tringify/theme-tools).
 // Rules the contract does not carry (field lists, manifest and template shapes) follow
 // https://dev-docs.tringify.com/themes/ and are written out below.
 
@@ -52,7 +53,7 @@ let contract;
 if (contractArg >= 0) {
   const file = args[contractArg + 1];
   const sourceArg = args.indexOf("--source");
-  const source = sourceArg >= 0 ? args[sourceArg + 1] : "tringify-theme contract";
+  const source = sourceArg >= 0 ? args[sourceArg + 1] : "tringify theme contract";
   contract = trimContract(JSON.parse(readFileSync(file, "utf8")), source);
   emit("data/contract.json", contract);
 } else {
