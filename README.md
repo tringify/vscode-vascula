@@ -25,9 +25,9 @@ Editor support for [Vascula](https://vascula.dev) templates and [Tringify themes
 
 ## Where the rules come from
 
-Setting types, `ctx_needs` roots and their fields, and the hosted form kinds are generated from the theme author contract printed by `tringify-theme contract` in [theme tools](https://github.com/tringify/theme-tools) v0.1.0, the same contract uploads are checked against. Field lists and the shapes of the manifest, templates and config files follow the [theme documentation](https://dev-docs.tringify.com/themes/section-schema). The global settings format (`config/settings_schema.json`) is not fully documented yet, so only its common fields are checked.
+Setting types, `ctx_needs` roots and their fields, and the hosted form kinds are generated from the theme author contract printed by `tringify theme contract` in the [Tringify CLI](https://github.com/tringify/cli) (`tringify-theme contract` in [theme tools](https://github.com/tringify/theme-tools) v0.1.0), the same contract uploads are checked against. Field lists and the shapes of the manifest, templates and config files follow the [theme documentation](https://dev-docs.tringify.com/themes/section-schema). The global settings format (`config/settings_schema.json`) is not fully documented yet, so only its common fields are checked.
 
-`tringify-theme check` remains the authority before you upload: it also checks that the markup compiles and that every name a section reads is declared.
+`tringify theme check` (or `tringify-theme check`) remains the authority before you upload: it also checks that the markup compiles and that every name a section reads is declared.
 
 ## Settings
 
@@ -50,11 +50,11 @@ npm run package         # dist/vscode-vascula-<version>.vsix
 xvfb-run -a npm run test:e2e -- --vsix dist/vscode-vascula-0.1.0.vsix   # in a real VS Code
 ```
 
-To update the generated schemas after a theme tools release:
+To update the generated schemas after a theme tools release, print the contract with the [Tringify CLI](https://github.com/tringify/cli) (or with `tringify-theme contract` from the theme tools):
 
 ```sh
-tringify-theme contract > contract.json
-node scripts/generate.mjs --contract contract.json --source "tringify-theme contract, theme-tools vX.Y.Z"
+TRINGIFY_THEME_TOOLS_VERSION=vX.Y.Z tringify theme contract > contract.json
+node scripts/generate.mjs --contract contract.json --source "tringify theme contract, theme-tools vX.Y.Z"
 ```
 
 ## License
