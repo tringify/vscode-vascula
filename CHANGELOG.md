@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Clearer description in the marketplaces. Contributor instructions moved to CONTRIBUTING.md.
+
 ## 0.1.0
 
 First release.

@@ -2,7 +2,7 @@
   "name": "vscode-vascula",
   "displayName": "Vascula for Tringify Themes",
   "description": "Syntax highlighting, snippets, filter docs and theme-file validation for Vascula templates and Tringify themes.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "tringify",
   "license": "MIT",
   "icon": "icon.png",
