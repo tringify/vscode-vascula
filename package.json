@@ -80,7 +80,8 @@
       },
       {
         "fileMatch": [
-          "templates/*.json"
+          "templates/*.json",
+          "templates/styles/*/*.json"
         ],
         "url": "./schemas/template.schema.json"
       },

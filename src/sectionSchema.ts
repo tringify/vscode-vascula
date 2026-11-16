@@ -73,7 +73,32 @@ const sameDiag = (a: Diagnostic, b: Diagnostic) =>
 interface Setting {
   id?: unknown;
   type?: unknown;
+  editor?: unknown;
+  min?: unknown;
+  max?: unknown;
+  image?: unknown;
   visible_if?: { setting?: unknown };
+}
+
+interface BlocksDecl {
+  types?: { type?: unknown; settings?: unknown }[];
+  default?: unknown;
+  accept_theme_blocks?: unknown;
+  accept_app_blocks?: unknown;
+  theme_blocks?: unknown;
+}
+
+// The platform's metafield block goes wherever theme or app blocks do.
+const METAFIELD_BLOCK = "metafield";
+
+/** Whether the blocks slot takes theme:<name> instances (vascula BlockSchema.AcceptsThemeBlock). */
+function acceptsThemeBlock(b: BlocksDecl | undefined, type: string): boolean {
+  if (!b || !type.startsWith("theme:")) return false;
+  const name = type.slice("theme:".length);
+  if (name === METAFIELD_BLOCK) return b.accept_app_blocks === true || b.accept_theme_blocks === true;
+  if (b.accept_theme_blocks !== true) return false;
+  const only = Array.isArray(b.theme_blocks) ? b.theme_blocks : [];
+  return only.length === 0 || only.includes(name);
 }
 
 /** Diagnostics for every schema block in the file. */
@@ -100,24 +125,14 @@ export async function validate(uri: string, text: string, options: Options): Pro
     (d) => ({ ...d, source: "vascula" }),
   );
   out.push(...errors);
-  if (!options.hints) return out;
 
-  const advDoc = advisory.parseJSONDocument(doc);
-  const warnings = await advisory.doValidation(doc, advDoc, { schemaValidation: "warning", trailingCommas: "ignore", comments: "ignore" });
-  for (const w of warnings) {
-    if (w.severity !== DiagnosticSeverity.Warning) continue;
-    if (errors.some((e) => sameDiag(e, w))) continue;
-    out.push({ ...w, source: "vascula" });
-  }
-
-  // Rules JSON Schema cannot express.
   let value: Record<string, unknown> | undefined;
   try {
     value = JSON.parse(text.slice(block.contentStart, block.contentEnd));
   } catch {
-    return out;
+    value = undefined;
   }
-  if (!value || typeof value !== "object" || Array.isArray(value)) return out;
+  if (!value || typeof value !== "object" || Array.isArray(value)) value = undefined;
   const raw = text.slice(block.contentStart, block.contentEnd);
   const locate = (needle: string, from = 0) => {
     const i = raw.indexOf(needle, from);
@@ -127,7 +142,55 @@ export async function validate(uri: string, text: string, options: Options): Pro
     const at = locate(needle);
     out.push(diag(starts, at, at + (needle.length || 1), message, DiagnosticSeverity.Warning));
   };
+  // Upload-rejected rules that need more than one value of the schema. These are errors, so
+  // they are reported with hints off too.
+  const errorAt = (needle: string, message: string) => {
+    const at = locate(needle);
+    out.push(diag(starts, at, at + (needle.length || 1), message, DiagnosticSeverity.Error));
+  };
+  const imageIds = (settings: unknown) =>
+    new Set(Array.isArray(settings) ? (settings as Setting[]).filter((s) => s && s.type === "image" && typeof s.id === "string").map((s) => s.id as string) : []);
 
+  // The checks vascula's validateSectionSchema runs on settings with an editor block.
+  // parent: the section's settings, when these belong to a block type.
+  const checkEditable = (settings: unknown, where: string, parent?: unknown) => {
+    if (!Array.isArray(settings)) return;
+    const images = imageIds(settings);
+    const parentImages = imageIds(parent);
+    for (const s of settings as Setting[]) {
+      if (!s || !s.editor || typeof s.id !== "string") continue;
+      if (s.type === "range" && typeof s.min === "number" && typeof s.max === "number" && s.max <= s.min) {
+        errorAt(`"${s.id}"`, `Range setting "${s.id}": max must be greater than min.`);
+      }
+      if (s.type === "point" && typeof s.image === "string" && s.image.trim() !== "") {
+        if (!images.has(s.image.trim()) && !parentImages.has(s.image.trim())) {
+          errorAt(`"${s.image}"`, `Point setting "${s.id}": "${s.image}" is not an image setting ${where}${parent ? " or its section" : ""}.`);
+        }
+      }
+      if (s.visible_if && s.visible_if.setting === s.id) {
+        errorAt(`"${s.id}"`, `Setting "${s.id}": visible_if cannot name the setting itself.`);
+      }
+    }
+  };
+  const blocksDecl = value?.blocks as BlocksDecl | undefined;
+  if (value) {
+    checkEditable(value.settings, "in this section");
+    if (blocksDecl && typeof blocksDecl === "object" && Array.isArray(blocksDecl.types)) {
+      for (const t of blocksDecl.types) if (t && typeof t.type === "string") checkEditable(t.settings, `in block type "${t.type}"`, value.settings);
+    }
+  }
+  if (!options.hints) return out;
+
+  const advDoc = advisory.parseJSONDocument(doc);
+  const warnings = await advisory.doValidation(doc, advDoc, { schemaValidation: "warning", trailingCommas: "ignore", comments: "ignore" });
+  for (const w of warnings) {
+    if (w.severity !== DiagnosticSeverity.Warning) continue;
+    if (errors.some((e) => sameDiag(e, w))) continue;
+    out.push({ ...w, source: "vascula" });
+  }
+  if (!value) return out;
+
+  // Rules JSON Schema cannot express.
   const checkSettings = (settings: unknown, where: string) => {
     if (!Array.isArray(settings)) return;
     const ids = new Set<string>();
@@ -146,9 +209,6 @@ export async function validate(uri: string, text: string, options: Options): Pro
   };
 
   const sectionIds = checkSettings(value.settings, "in this section") ?? new Set<string>();
-  const blocksDecl = value.blocks as
-    | { types?: { type?: unknown; settings?: unknown }[]; default?: unknown; accept_theme_blocks?: unknown; accept_app_blocks?: unknown }
-    | undefined;
   const typeNames = new Set<string>();
   if (blocksDecl && typeof blocksDecl === "object") {
     for (const t of Array.isArray(blocksDecl.types) ? blocksDecl.types : []) {
@@ -159,7 +219,8 @@ export async function validate(uri: string, text: string, options: Options): Pro
     }
     if (Array.isArray(blocksDecl.default)) {
       for (const d of blocksDecl.default) {
-        if (typeof d === "string" && !typeNames.has(d) && !d.startsWith("theme:")) {
+        // Only local block types: theme blocks start in presets, not in blocks.default.
+        if (typeof d === "string" && !typeNames.has(d)) {
           warnAt(`"${d}"`, `Default block "${d}" is not a declared block type.`);
         }
       }
@@ -177,8 +238,8 @@ export async function validate(uri: string, text: string, options: Options): Pro
         for (const pb of p.blocks as { type?: unknown }[]) {
           const t = pb?.type;
           if (typeof t !== "string") continue;
-          const ok = typeNames.has(t) || (t.startsWith("theme:") && blocksDecl?.accept_theme_blocks === true);
-          if (!ok) warnAt(`"${t}"`, `Preset block "${t}" is not a declared block type${t.startsWith("theme:") ? " (the section does not accept theme blocks)" : ""}.`);
+          const ok = t.startsWith("theme:") ? acceptsThemeBlock(blocksDecl, t) : typeNames.has(t);
+          if (!ok) warnAt(`"${t}"`, t.startsWith("theme:") ? `Preset block "${t}" is a theme block the section does not accept.` : `Preset block "${t}" is not a declared block type.`);
         }
       }
     }

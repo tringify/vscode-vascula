@@ -10,6 +10,9 @@
       "include": "#markup"
     },
     {
+      "include": "#tag-name-before-markup"
+    },
+    {
       "include": "text.html.derivative"
     }
   ],
@@ -18,6 +21,41 @@
       "patterns": [
         {
           "include": "#markup"
+        }
+      ]
+    },
+    "L:text.html.vascula meta.property-list.css - (meta.property-value.css | comment)": {
+      "comment": "VS Code's CSS grammar marks the deprecated system colour `Background` as invalid wherever it appears in a value, including `transition: background 0.2s`, where it is a property name. These properties take property names, not colours, so their values are tokenized here without that rule.",
+      "patterns": [
+        {
+          "begin": "(?i)(?<![\\w-])((?:-(?:webkit|moz|ms|o)-)?(?:transition-property|transition|will-change))\\s*(:)\\s*",
+          "beginCaptures": {
+            "1": {
+              "name": "meta.property-name.css support.type.property-name.css"
+            },
+            "2": {
+              "name": "punctuation.separator.key-value.css"
+            }
+          },
+          "end": "\\s*(;)|\\s*(?=}|\\))",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.terminator.rule.css"
+            }
+          },
+          "contentName": "meta.property-value.css",
+          "patterns": [
+            {
+              "match": "(?i)(?<![\\w-])background(?![\\w-])",
+              "name": "support.type.property-name.css"
+            },
+            {
+              "include": "source.css#comment-block"
+            },
+            {
+              "include": "source.css#property-values"
+            }
+          ]
         }
       ]
     }
@@ -39,6 +77,33 @@
         },
         {
           "include": "#tag"
+        }
+      ]
+    },
+    "tag-name-before-markup": {
+      "comment": "An HTML tag whose name is followed straight away by markup, as in <a{% if url %} href=\"{{ url }}\"{% endif %}>. The HTML grammars read the name up to the next space (a{%), so the markup would be part of the tag name.",
+      "begin": "(</?)([A-Za-z][A-Za-z0-9:.-]*)(?=\\{\\{|\\{%|\\{#)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.html"
+        }
+      },
+      "end": "((?: ?/)?>)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.end.html"
+        }
+      },
+      "name": "meta.tag.other.html",
+      "patterns": [
+        {
+          "include": "#markup"
+        },
+        {
+          "include": "text.html.basic#attribute"
         }
       ]
     },
