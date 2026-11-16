@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-11-17)
 
 - Schemas, CTX names and setting types follow the theme author contract of theme tools v0.1.75 (`tringify theme contract`). Canvas, the default theme, now shows no diagnostics; before, 199 false ones in 77 files.
 - New in section schemas: `migrations`, `preview_image`, `blocks.theme_blocks`, `visible_if` with `set`, the `datetime`, `metafield` (with `owner`), `point` (with `image`) and `product_source` setting types, and ten new CTX roots (`age_gate`, `express`, `design_mode`, `theme_preview`, …). `review_notice` is no longer a CTX root.
