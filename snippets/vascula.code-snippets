@@ -248,7 +248,7 @@
   },
   "Setting": {
     "prefix": "setting",
-    "body": "{ \"id\": \"${1:id}\", \"type\": \"${2|text,textarea,richtext,number,range,checkbox,select,color,color_scheme,image,video,url,object,vascula,menu,product,collection,category,vendor,brand,page,blog_post,blog_category,policy,product_list,collection_list|}\", \"default\": ${3:\"\"}, \"editor\": { \"label\": \"${4:Label}\", \"group\": \"${5:content}\" } }",
+    "body": "{ \"id\": \"${1:id}\", \"type\": \"${2|text,textarea,richtext,number,range,checkbox,select,color,color_scheme,image,video,url,object,vascula,menu,product,collection,category,vendor,brand,page,blog_post,blog_category,policy,product_list,collection_list,datetime,metafield,point,product_source|}\", \"default\": ${3:\"\"}, \"editor\": { \"label\": \"${4:Label}\", \"group\": \"${5:content}\" } }",
     "description": "A section setting."
   }
 }

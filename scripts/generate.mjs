@@ -3,12 +3,16 @@
 //
 //   node scripts/generate.mjs                     regenerate schemas from data/contract.json
 //   node scripts/generate.mjs --contract FILE     import `tringify theme contract` output first
-//   node scripts/generate.mjs --check             fail if any generated file is out of date
+//   node scripts/generate.mjs --platform FILE     check against FILE instead of data/platform-fields.json
+//   node scripts/generate.mjs --check             fail if any generated file is out of date, or if the
+//                                                 schemas disagree with data/platform-fields.json
 //
 // The contract comes from the Tringify CLI (`tringify theme contract`, https://github.com/tringify/cli),
-// or the theme tools' `tringify-theme contract` (https://github.com/tringify/theme-tools).
-// Rules the contract does not carry (field lists, manifest and template shapes) follow
-// https://dev-docs.tringify.com/themes/ and are written out below.
+// or the theme tools' `tringify-theme contract` (https://github.com/tringify/theme-tools). It carries
+// the vocabularies: setting types, theme setting types, CTX names and fields, migration operations.
+// The fields of a section schema, settings_schema.json and migrations, with their JSON types, come
+// from data/platform-fields.json (written by scripts/platform-fields.mjs from the theme check source).
+// Other rules (manifest and template shapes) follow https://dev-docs.tringify.com/themes/.
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -33,6 +37,8 @@ function trimContract(full, source) {
     source,
     schema_version: full.schema_version,
     setting_types: full.setting_types,
+    theme_setting_types: full.theme_setting_types,
+    migration_operations: full.migration_operations,
     resource_picker_types: full.resource_picker_types,
     max_theme_block_depth: full.max_theme_block_depth,
     default_resource_list_max: full.default_resource_list_max,
@@ -59,6 +65,9 @@ if (contractArg >= 0) {
 } else {
   contract = JSON.parse(readFileSync(join(root, "data/contract.json"), "utf8"));
 }
+// --platform FILE checks against another copy (the tests use it to prove the check fails).
+const platformArg = args.indexOf("--platform");
+const platform = JSON.parse(readFileSync(platformArg >= 0 ? args[platformArg + 1] : join(root, "data/platform-fields.json"), "utf8"));
 
 // ---------------------------------------------------------------------------
 // Shared vocabulary
@@ -92,10 +101,26 @@ const settingTypeDocs = {
   policy: "Search and pick one policy. The template reads the item, or nothing if it was deleted.",
   product_list: "Pick and order several products, up to `max`. The template reads a list of the picked items.",
   collection_list: "Pick and order several collections, up to `max`. The template reads a list of the picked items.",
+  datetime: "Date and time in the store's time zone. Stored as wall time without an offset, such as `2026-12-01T09:00`.",
+  metafield:
+    "Pick one of the store's metafield definitions for the resource named by `owner` (required). The template reads `{namespace, key, handle}`.",
+  point:
+    "A spot on the image setting named by `image` (required), placed by clicking or dragging. The template reads `x` and `y`, percentages (0–100) of the image's width and height.",
+  product_source:
+    "A live product feed: a category or collection, optionally narrowed to one tag, with an order and a count up to `max`. The template reads `entity`, `url` and `products`.",
+};
+const themeSettingTypeDocs = {
+  ...settingTypeDocs,
+  color_scheme_group: "The theme's colour schemes: a list of schemes with an `id`, `label` and `colors`, described by `fields`.",
+  font_picker: "A font from the platform's font library or the store's own fonts. The platform supplies the options.",
+  css: "Custom CSS the merchant writes, up to 64 KB.",
 };
 
 for (const t of contract.setting_types) {
   if (!settingTypeDocs[t]) throw new Error(`setting type ${t} has no description; add one to scripts/generate.mjs`);
+}
+for (const t of contract.theme_setting_types) {
+  if (!themeSettingTypeDocs[t]) throw new Error(`theme setting type ${t} has no description; add one to scripts/generate.mjs`);
 }
 
 const STANDARD_SURFACES = [
@@ -132,6 +157,12 @@ function resolve(schema) {
 }
 
 const roots = contract.ctx.roots;
+{
+  const names = roots.map((r) => r.name).sort().join(",");
+  if (names !== [...contract.ctx_needs].sort().join(",")) {
+    throw new Error("the contract's ctx_needs and CTX roots differ; decide which one ctx_needs completion and hovers follow");
+  }
+}
 const rootDoc = (r) => {
   const where =
     r.availability === "route"
@@ -161,141 +192,211 @@ for (const r of roots) {
     }
   }
 }
-const rootAlternation = roots.map((r) => r.name).join("|");
 
 // ---------------------------------------------------------------------------
 // Section schema
+//
+// The field lists, their JSON types and the rules below follow the structs and checks the
+// upload uses to read a {% schema %} block (vascula/section.go and vascula/migrations.go in
+// the theme check source). data/platform-fields.json records those structs, and
+// checkPlatformFields() at the end of this file fails when the two disagree.
+//
+// Strict schema (errors): what an upload rejects. The upload decodes the schema with Go's
+// encoding/json, so a field of the wrong JSON type is rejected; unknown keys are ignored,
+// except in migrations, which reject them. Setting rules apply only to settings with an
+// `editor` block: a setting without one is runtime data the host fills, and is not checked.
+// Advisory schema (warnings): documented rules uploads do not enforce, and unknown keys.
 
-function setting({ advisory, inObject = false }) {
+const THEME_BLOCK_NAME = "[A-Za-z0-9_-]{1,100}";
+// A settings_to_blocks / rename_block destination, or a preset block, naming a theme block.
+const SETTING_ID_IN_MIGRATION = "^(?!blocks$)[^.\\[\\]]+$";
+const PREVIEW_IMAGE = "^assets/[A-Za-z0-9_.-]*[A-Za-z0-9_-][A-Za-z0-9_.-]*\\.(?:[Pp][Nn][Gg]|[Jj][Pp][Ee]?[Gg]|[Ww][Ee][Bb][Pp]|[Gg][Ii][Ff])$";
+
+// A rule that fails with its own message: vscode-json-languageservice reports a failed `not`
+// with the errorMessage of the schema that holds it.
+const fail = (errorMessage) => ({ not: {}, errorMessage });
+const forbid = (keys, errorMessage) => ({ not: { anyOf: keys.map((k) => ({ required: [k] })) }, errorMessage });
+const closed = (advisory) => (advisory ? { additionalProperties: false } : {});
+
+const OBJECT_FIELD_TYPES = contract.setting_types.filter((t) => t !== "metafield" && t !== "point");
+const typeSnippets = (types) => types.map((t) => ({ label: t, markdownDescription: settingTypeDocs[t], body: t }));
+
+function editorDef(advisory) {
+  return {
+    type: "object",
+    markdownDescription:
+      "Present on every setting merchants edit. A setting without `editor` is runtime data the host fills, and is not shown to merchants. `label` and `group` can be literal text or keys from `locales/<locale>.schema.json` (`fieldLabel.<label>`, `fieldGroup.<group>`).",
+    properties: {
+      label: { type: "string", description: "The setting's or block's label in the theme editor." },
+      group: { type: "string", description: "The editor group the setting appears in, such as content or settings." },
+      icon: { type: "string", description: "For block types: the block's icon in the theme editor." },
+    },
+    ...(advisory ? { required: ["label"] } : {}),
+    ...closed(advisory),
+  };
+}
+
+function optionDef(advisory) {
+  return {
+    type: "object",
+    properties: {
+      value: { type: "string", description: "The value the template reads." },
+      label: { type: "string", description: "The label merchants see." },
+      group: { type: "string", description: "Set by the platform on font_picker options. Themes do not write it." },
+    },
+    ...(advisory ? { required: ["value", "label"] } : {}),
+    ...closed(advisory),
+  };
+}
+
+function visibleIfDef(advisory) {
+  return {
+    type: "object",
+    markdownDescription: md(
+      "Show the setting in the editor only while another setting of the same section or block has one of `values`, or, with `set`, while it has a value (`true`) or is empty (`false`). Give exactly one of `values` and `set`.",
+      "/themes/section-schema#settings",
+    ),
+    required: ["setting"],
+    properties: {
+      setting: { type: "string", minLength: 1, pattern: "\\S", description: "The id of the other setting." },
+      values: { type: "array", items: { type: "string" }, minItems: 1, description: "The values that show this setting." },
+      set: {
+        type: "boolean",
+        description: "true: show this setting while the other one has a value (an image picked, text entered). false: while it is empty.",
+      },
+    },
+    allOf: [
+      { if: { required: ["values", "set"] }, then: fail("visible_if takes exactly one of values and set.") },
+      { if: { not: { anyOf: [{ required: ["values"] }, { required: ["set"] }] } }, then: fail("visible_if needs values or set.") },
+    ],
+    defaultSnippets: [
+      { label: "values", body: { setting: "$1", values: ["$2"] } },
+      { label: "set", body: { setting: "$1", set: true } },
+    ],
+    ...closed(advisory),
+  };
+}
+
+function objectFieldDef(advisory) {
+  return {
+    type: "object",
+    required: ["key"],
+    properties: {
+      key: { type: "string", minLength: 1, pattern: "\\S", description: "The field's key in the object value. Unique in the setting." },
+      type: {
+        type: "string",
+        ...enumOf(OBJECT_FIELD_TYPES, (t) => settingTypeDocs[t]),
+        markdownDescription: "The field's control. Any setting type except `metafield` and `point`.",
+      },
+      label: { type: "string", description: "The field's editor label." },
+      required: { type: "boolean", description: "The merchant must fill the field." },
+      max: { type: "integer", description: "The field's maximum, such as the most characters." },
+      options: { type: "array", items: { $ref: "#/definitions/option" }, markdownDescription: "For a `select` field: the choices." },
+    },
+    defaultSnippets: [{ label: "field", body: { key: "$1", type: "${2:text}", label: "$3" } }],
+    ...(advisory ? { required: ["key", "type"] } : {}),
+    ...closed(advisory),
+  };
+}
+
+// The rules an upload applies to a setting with an `editor` block.
+function editableSettingRules(types) {
+  const when = (type, then) => ({ if: { properties: { type: { const: type } }, required: ["type"] }, then });
+  return [
+    { required: ["id", "type"], properties: { id: { pattern: "\\S" }, type: { ...enumOf(types, (t) => settingTypeDocs[t]) } } },
+    when("range", {
+      required: ["min", "max"],
+      properties: { step: { exclusiveMinimum: 0, description: "Must be greater than 0." } },
+    }),
+    when("metafield", { required: ["owner"] }),
+    { if: { not: { properties: { type: { const: "metafield" } }, required: ["type"] } }, then: forbid(["owner"], "Only metafield settings take owner.") },
+    when("point", { required: ["image"], properties: { image: { pattern: "\\S" } } }),
+    { if: { not: { properties: { type: { const: "point" } }, required: ["type"] } }, then: forbid(["image"], "Only point settings take image.") },
+    when("object", { required: ["fields"], properties: { fields: { minItems: 1 } } }),
+  ];
+}
+
+function settingDef(advisory) {
   const s = {
     type: "object",
-    required: inObject ? ["key", "type"] : ["id", "type"],
     properties: {
-      ...(inObject
-        ? {
-            key: { type: "string", minLength: 1, description: "The field's key in the object value." },
-            label: { type: "string", description: "The field's editor label." },
-          }
-        : {
-            id: {
-              type: "string",
-              minLength: 1,
-              markdownDescription: "Unique in the section. The template reads `settings.<id>`.",
-            },
-          }),
+      id: { type: "string", minLength: 1, markdownDescription: "Unique in the section or block. The template reads `settings.<id>`." },
       type: {
-        ...enumOf(contract.setting_types, (t) => settingTypeDocs[t]),
+        type: "string",
         markdownDescription: md("The setting type, which decides the editor control.", "/themes/section-schema#setting-types"),
+        defaultSnippets: typeSnippets(contract.setting_types),
       },
       default: { description: "The value a new section starts with." },
-      editor: {
-        type: "object",
-        markdownDescription:
-          "`label` and optional `group`. A setting without `editor` is not shown to merchants. Both can be literal text or keys from `locales/<locale>.schema.json` (`fieldLabel.<label>`, `fieldGroup.<group>`).",
-        properties: {
-          label: { type: "string", description: "The setting's label in the theme editor." },
-          group: { type: "string", description: "The editor group the setting appears in." },
-        },
-        ...(advisory ? { additionalProperties: false } : {}),
-      },
-      options: {
-        type: "array",
-        markdownDescription: "For `select`: the choices.",
-        items: {
-          type: "object",
-          required: ["value", "label"],
-          properties: {
-            value: { description: "The value the template reads." },
-            label: { type: "string", description: "The label merchants see." },
-          },
-          ...(advisory ? { additionalProperties: false } : {}),
-        },
-      },
+      editor: { $ref: "#/definitions/editor" },
+      options: { type: "array", items: { $ref: "#/definitions/option" }, markdownDescription: "For `select`: the choices." },
       fields: {
         type: "array",
-        markdownDescription: "For `object`: the fields of the value, each with a unique `key`.",
         items: { $ref: "#/definitions/objectField" },
+        markdownDescription: "For `object`: the fields of the value, each with a unique `key`.",
       },
       min: { type: "number", markdownDescription: "For `range` (required) and `number`: the lowest value." },
       max: {
         type: "number",
-        markdownDescription: `For \`range\` (required) and \`number\`: the highest value. For \`product_list\` and \`collection_list\`: the most items (${contract.default_resource_list_max} if not set).`,
+        markdownDescription: `For \`range\` (required) and \`number\`: the highest value. For \`product_list\`, \`collection_list\` and \`product_source\`: the most items (${contract.default_resource_list_max} if not set).`,
       },
       step: { type: "number", markdownDescription: "For `range`: the step between values." },
       unit: { type: "string", markdownDescription: "For `range`: the unit shown after the value, such as `px`." },
-      visible_if: {
-        type: "object",
-        markdownDescription: "Show the setting only when another setting has one of the given values.",
-        required: ["setting", "values"],
-        properties: {
-          setting: { type: "string", minLength: 1, description: "The id of the other setting." },
-          values: { type: "array", minItems: 1, description: "The values that show this setting." },
-        },
-        defaultSnippets: [{ body: { setting: "$1", values: ["$2"] } }],
-        ...(advisory ? { additionalProperties: false } : {}),
+      visible_if: { $ref: "#/definitions/visibleIf" },
+      owner: {
+        type: "string",
+        ...enumOf(platform.values.metafieldSettingOwners, (o) => `Metafield definitions of ${o === "store" ? "the store" : "a " + o.replace("_", " ")}.`),
+        markdownDescription: "For `metafield` (required): the resource whose metafield definitions the merchant picks from. Only `metafield` settings take `owner`.",
+      },
+      image: {
+        type: "string",
+        markdownDescription:
+          "For `point` (required): the id of the `image` setting the point sits on, in the same block or its section. Only `point` settings take `image`.",
       },
     },
-    allOf: [
-      {
-        if: { properties: { type: { const: "range" } }, required: ["type"] },
-        then: { required: ["min", "max"] },
-      },
+    allOf: [{ if: { required: ["editor"] }, then: { allOf: editableSettingRules(contract.setting_types) } }],
+    defaultSnippets: [
+      { label: "setting", body: { id: "$1", type: "${2:text}", default: "$3", editor: { label: "$4", group: "${5:content}" } } },
     ],
-    defaultSnippets: inObject
-      ? [{ label: "field", body: { key: "$1", type: "${2:text}", label: "$3" } }]
-      : [
-          {
-            label: "setting",
-            body: { id: "$1", type: "${2:text}", default: "$3", editor: { label: "$4", group: "${5:content}" } },
-          },
-        ],
   };
   if (advisory) {
     s.additionalProperties = false;
-    s.allOf.push(
-      {
-        if: { properties: { type: { const: "select" } }, required: ["type"] },
-        then: { required: ["options"], properties: { options: { minItems: 1 } } },
-      },
-      {
-        if: { properties: { type: { const: "object" } }, required: ["type"] },
-        then: { required: ["fields"], properties: { fields: { minItems: 1 } } },
-      },
-    );
+    s.required = ["id", "type"];
+    s.properties.type = { ...s.properties.type, ...enumOf(contract.setting_types, (t) => settingTypeDocs[t]) };
+    s.allOf.push({
+      if: { properties: { type: { const: "select" } }, required: ["type"] },
+      then: { required: ["options"], properties: { options: { minItems: 1 } } },
+    });
   }
   return s;
 }
 
-function sectionSchema({ advisory }) {
-  const blockType = {
+function blockTypeDef(advisory) {
+  const d = {
     type: "object",
-    required: ["type"],
+    required: ["type", "settings"],
     properties: {
-      type: { type: "string", minLength: 1, description: "The block type. Unique in the section." },
-      editor: {
-        type: "object",
-        properties: { label: { type: "string", description: "The block's name in the theme editor." } },
+      type: { type: "string", minLength: 1, pattern: "\\S", description: "The block type. Unique in the section." },
+      editor: { $ref: "#/definitions/editor" },
+      settings: {
+        type: "array",
+        items: { $ref: "#/definitions/setting" },
+        allOf: [{ contains: { type: "object", required: ["editor"] }, errorMessage: "A block type needs at least one setting with an editor block." }],
+        markdownDescription: "The block's settings. At least one has an `editor` block.",
       },
-      settings: { type: "array", items: { $ref: "#/definitions/setting" }, description: "The block's settings." },
     },
     defaultSnippets: [
       {
         label: "block type",
-        body: {
-          type: "$1",
-          editor: { label: "$2" },
-          settings: [{ id: "$3", type: "${4:text}", default: "$5", editor: { label: "$6", group: "content" } }],
-        },
+        body: { type: "$1", editor: { label: "$2" }, settings: [{ id: "$3", type: "${4:text}", default: "$5", editor: { label: "$6", group: "content" } }] },
       },
     ],
+    ...closed(advisory),
   };
-  if (advisory) {
-    blockType.additionalProperties = false;
-    blockType.required = ["type", "settings"];
-    blockType.properties.settings = { ...blockType.properties.settings, minItems: 1 };
-    blockType.properties.editor.additionalProperties = false;
-  }
-  const blocks = {
+  return d;
+}
+
+function blocksDef(advisory) {
+  return {
     type: "object",
     markdownDescription: md("The blocks the section accepts.", "/themes/section-schema#blocks"),
     properties: {
@@ -313,29 +414,170 @@ function sectionSchema({ advisory }) {
           "/themes/theme-blocks",
         ),
       },
+      theme_blocks: {
+        type: "array",
+        uniqueItems: true,
+        items: {
+          type: "string",
+          pattern: `^${THEME_BLOCK_NAME}$`,
+          errorMessage: "A theme block name, as in blocks/<name>.vasc, without theme:.",
+        },
+        markdownDescription:
+          "Accept only these theme blocks (names of `blocks/<name>.vasc`, without `theme:`), such as only slides in a slideshow. Needs `accept_theme_blocks`. Omit to accept every theme block.",
+      },
       accept_app_blocks: { type: "boolean", description: "Accept blocks from the merchant's installed apps." },
     },
-    ...(advisory ? { additionalProperties: false } : {}),
+    allOf: [
+      {
+        if: { required: ["theme_blocks"], properties: { theme_blocks: { minItems: 1 } } },
+        then: { required: ["accept_theme_blocks"], properties: { accept_theme_blocks: { const: true, errorMessage: "theme_blocks needs \"accept_theme_blocks\": true." } } },
+      },
+    ],
+    ...closed(advisory),
   };
-  const preset = {
+}
+
+function presetDef(advisory) {
+  return {
     type: "object",
     required: ["name"],
     properties: {
-      name: { type: "string", minLength: 1, description: "The preset's name in the editor's \"Add section\" list." },
+      name: { type: "string", minLength: 1, pattern: "\\S", description: "The preset's name in the editor's \"Add section\" list. Unique in the section." },
       category: { type: "string", description: "The category the preset is listed under." },
       settings: { type: "object", description: "Values for declared settings." },
-      blocks: {
-        type: "array",
-        description: "Starting blocks: declared block types, or theme:<name> when the section accepts theme blocks.",
-        items: {
-          type: "object",
-          required: ["type"],
-          properties: { type: { type: "string" }, settings: { type: "object" } },
-        },
+      blocks: { type: "array", items: { $ref: "#/definitions/presetBlock" }, description: "Starting blocks." },
+    },
+    ...closed(advisory),
+  };
+}
+
+function presetBlockDef(advisory) {
+  return {
+    type: "object",
+    required: ["type"],
+    properties: {
+      type: { type: "string", description: "A declared block type, or theme:<name> for a theme block the section accepts." },
+      settings: { type: "object", description: "Values for the block's settings." },
+    },
+    ...closed(advisory),
+  };
+}
+
+// Migrations reject unknown keys, so these are closed in the strict schema too.
+const opDocs = {
+  rename_block: "A local block type was renamed: `from_type` to `to_type` (a declared type, or `theme:<name>` the section accepts).",
+  rename_setting: "A setting was renamed in the same scope: `from` to `to`.",
+  move_setting: "A setting moved to another scope (section ↔ local block type): `from` to `to`.",
+  remove_setting: "A setting was dropped on purpose: `from` only.",
+  set_default: "Fill a value for a new setting `to` in saved sections that lack it: `default`.",
+  combine_point: "Two retired number settings (`from` horizontal, `from_y` vertical) become the point setting `to`.",
+  settings_to_blocks: "Retired settings become theme blocks in `settings.blocks`: `blocks`.",
+};
+for (const op of contract.migration_operations) {
+  if (!opDocs[op]) throw new Error(`migration operation ${op} has no description; add one to scripts/generate.mjs`);
+}
+
+function settingLocationDef() {
+  return {
+    type: "object",
+    required: ["setting"],
+    properties: {
+      block_type: {
+        type: "string",
+        pattern: "^[^:]*$",
+        patternErrorMessage: "A local block type the section declares, without theme: or app:.",
+        description: "A local block type. Omit for a section setting.",
+      },
+      setting: {
+        type: "string",
+        minLength: 1,
+        pattern: SETTING_ID_IN_MIGRATION,
+        patternErrorMessage: "A setting id: not blocks, and without dots or brackets.",
+        description: "The setting id.",
       },
     },
-    ...(advisory ? { additionalProperties: false } : {}),
+    additionalProperties: false,
   };
+}
+
+function migrationBlockDef() {
+  const settingId = { pattern: SETTING_ID_IN_MIGRATION, patternErrorMessage: "A setting id: not blocks, and without dots or brackets." };
+  const settingMap = { type: "object", propertyNames: settingId, additionalProperties: { type: "string" } };
+  return {
+    type: "object",
+    required: ["type", "settings"],
+    properties: {
+      type: {
+        type: "string",
+        pattern: `^theme:${THEME_BLOCK_NAME}$`,
+        patternErrorMessage: "theme:<name>, a theme block the owner accepts.",
+        description: "theme:<name>, a theme block the owner accepts.",
+      },
+      settings: { ...settingMap, minProperties: 1, description: "The new block's setting ids, mapped to the owner's retired setting ids." },
+      copy: { ...settingMap, description: "More of the new block's setting ids, mapped to settings the owner keeps." },
+      values: { type: "object", propertyNames: settingId, additionalProperties: { not: { type: "null" } }, description: "Fixed settings of the new block." },
+      when: { type: "array", items: { type: "string" }, description: "Settings that must all have a value for the block to be created." },
+    },
+    additionalProperties: false,
+  };
+}
+
+function migrationDef() {
+  const op = (name, then) => ({ if: { properties: { op: { const: name } }, required: ["op"] }, then });
+  const none = (name, ...keys) => forbid(keys, `${name} does not take ${keys.join(", ").replace(/, ([^,]*)$/, " or $1")}.`);
+  return {
+    type: "object",
+    required: ["id", "op"],
+    markdownDescription: md("An operation that carries merchants' saved settings across a schema change.", "/themes/section-schema#migrations"),
+    properties: {
+      id: { type: "string", minLength: 1, pattern: "\\S", description: "Unique among the migrations. Never reuse one." },
+      op: { type: "string", ...enumOf(contract.migration_operations, (o) => opDocs[o]) },
+      from_type: {
+        type: "string",
+        pattern: "^[^:]+$",
+        patternErrorMessage: "The retired local block type, without theme: or app:.",
+        description: "rename_block: the retired local block type.",
+      },
+      to_type: { type: "string", description: "rename_block: a declared block type, or theme:<name>." },
+      from: { $ref: "#/definitions/settingLocation" },
+      to: { $ref: "#/definitions/settingLocation" },
+      from_y: { $ref: "#/definitions/settingLocation" },
+      default: { not: { type: "null" }, description: "set_default: the value." },
+      blocks: { type: "array", items: { $ref: "#/definitions/migrationBlock" }, description: "settings_to_blocks: the theme blocks to create." },
+      source_defaults: {
+        type: "object",
+        additionalProperties: { not: { type: "null" } },
+        description: "settings_to_blocks, or rename_block to a theme block: the retired settings' old defaults.",
+      },
+    },
+    additionalProperties: false,
+    allOf: [
+      { if: { not: { properties: { op: { const: "rename_block" } }, required: ["op"] } }, then: forbid(["from_type", "to_type"], "from_type and to_type are only for rename_block.") },
+      { if: { not: { properties: { op: { const: "settings_to_blocks" } }, required: ["op"] } }, then: forbid(["blocks"], "blocks is only for settings_to_blocks.") },
+      {
+        if: { not: { properties: { op: { enum: ["settings_to_blocks", "rename_block"] } }, required: ["op"] } },
+        then: forbid(["source_defaults"], "source_defaults is only for settings_to_blocks and rename_block."),
+      },
+      { if: { not: { properties: { op: { const: "combine_point" } }, required: ["op"] } }, then: forbid(["from_y"], "from_y is only for combine_point.") },
+      op("rename_block", { required: ["from_type", "to_type"], allOf: [none("rename_block", "from", "to", "default")] }),
+      op("settings_to_blocks", { required: ["blocks"], properties: { blocks: { minItems: 1 } }, allOf: [none("settings_to_blocks", "from", "to", "default")] }),
+      op("remove_setting", { required: ["from"], allOf: [none("remove_setting", "to", "default")] }),
+      op("rename_setting", { required: ["from", "to"], allOf: [none("rename_setting", "default")] }),
+      op("move_setting", { required: ["from", "to"], allOf: [none("move_setting", "default")] }),
+      op("set_default", { required: ["to", "default"], allOf: [none("set_default", "from")] }),
+      op("combine_point", { required: ["from", "from_y", "to"], allOf: [none("combine_point", "default")] }),
+    ],
+    defaultSnippets: [
+      { label: "rename_setting", body: { id: "$1", op: "rename_setting", from: { setting: "$2" }, to: { setting: "$3" } } },
+      { label: "remove_setting", body: { id: "$1", op: "remove_setting", from: { setting: "$2" } } },
+    ],
+  };
+}
+
+// CTX names a section may declare: the contract's ctx_needs, optionally with a field path.
+const ctxNeedPattern = `^(${contract.ctx_needs.join("|")})(\\.[A-Za-z_][A-Za-z0-9_]*)*$`;
+
+function sectionSchema({ advisory }) {
   const schema = {
     $schema: "http://json-schema.org/draft-07/schema#",
     $id: `https://github.com/tringify/vscode-vascula/schemas/section${advisory ? ".advisory" : ""}.schema.json`,
@@ -346,17 +588,19 @@ function sectionSchema({ advisory }) {
     properties: {
       name: { type: "string", minLength: 1, markdownDescription: "The section's name, unique in the theme. A theme block's name matches its file name." },
       kind: {
+        type: "string",
         ...enumOf(["section", "layout", "embed", "block"], (k) =>
           ({
             section: "A section merchants place on a page (default).",
             layout: "A section for a global surface such as the header or footer. Declares a `target`.",
             embed: "A section for the overlay layer, such as a cart drawer or popup. Declares a `target`.",
-            block: "A theme block in `blocks/`. No `target` and no presets.",
+            block: "A theme block in `blocks/`. No `target`, presets or `preview_image`.",
           })[k],
         ),
         markdownDescription: md("`section` (default), `layout`, `embed` or `block`.", "/themes/sections#section-kinds"),
       },
       target: {
+        type: "string",
         ...enumOf(GLOBAL_SURFACES, (t) =>
           ({
             global_body_start: "Opening of `<body>`, before the page template: announcement bar, header.",
@@ -367,6 +611,13 @@ function sectionSchema({ advisory }) {
         markdownDescription: md("The global surface a `layout` or `embed` section renders in.", "/themes/templates-and-surfaces#global-surfaces"),
       },
       icon: { type: "string", description: "The icon shown for the section in the editor." },
+      preview_image: {
+        type: "string",
+        pattern: PREVIEW_IMAGE,
+        errorMessage: "A theme image asset path such as assets/header-preview.png (.png, .jpg, .jpeg, .webp or .gif).",
+        markdownDescription:
+          "A theme image (`assets/<name>.png`, `.jpg`, `.jpeg`, `.webp` or `.gif`) the editor shows for this section where merchants choose between interchangeable sections. Not for theme blocks.",
+      },
       ctx_needs: {
         type: "array",
         uniqueItems: true,
@@ -376,10 +627,18 @@ function sectionSchema({ advisory }) {
         ),
         items: {
           type: "string",
-          pattern: `^(${rootAlternation})(\\.[A-Za-z_][A-Za-z0-9_]*)*$`,
+          pattern: ctxNeedPattern,
           errorMessage: "Unknown CTX name. A ctx_needs entry is a CTX root, such as product or cart, optionally followed by a field: cart.item_count.",
           defaultSnippets: ctxNeedEnum.map((label, i) => ({ label, markdownDescription: ctxNeedDocs[i], body: label })),
         },
+      },
+      migrations: {
+        type: "array",
+        items: { $ref: "#/definitions/migration" },
+        markdownDescription: md(
+          "Operations, in order, that carry merchants' saved settings and blocks across a change to this schema, such as a renamed setting or block type.",
+          "/themes/section-schema#migrations",
+        ),
       },
       settings: { type: "array", items: { $ref: "#/definitions/setting" }, markdownDescription: md("The section's settings.", "/themes/section-schema#settings") },
       blocks: { $ref: "#/definitions/blocks" },
@@ -393,19 +652,39 @@ function sectionSchema({ advisory }) {
       {
         if: { properties: { kind: { const: "block" } }, required: ["kind"] },
         then: {
-          not: { anyOf: [{ required: ["target"] }, { required: ["presets"] }] },
+          allOf: [
+            { not: { required: ["target"], properties: { target: { minLength: 1 } } }, errorMessage: "A theme block has no target." },
+            { not: { required: ["presets"], properties: { presets: { minItems: 1 } } }, errorMessage: "A theme block has no presets." },
+            { not: { required: ["preview_image"], properties: { preview_image: { minLength: 1 } } }, errorMessage: "A theme block has no preview_image." },
+          ],
           properties: {
-            blocks: { not: { required: ["types"] } },
+            blocks: {
+              required: ["accept_theme_blocks"],
+              properties: { accept_theme_blocks: { const: true, errorMessage: "A blocks slot on a theme block needs \"accept_theme_blocks\": true." } },
+              allOf: [
+                {
+                  not: { required: ["types"], properties: { types: { minItems: 1 } } },
+                  errorMessage: "A theme block's blocks slot takes only theme blocks: no types of its own.",
+                },
+              ],
+            },
           },
         },
       },
     ],
     definitions: {
-      setting: setting({ advisory }),
-      objectField: setting({ advisory, inObject: true }),
-      blocks,
-      blockType,
-      preset,
+      setting: settingDef(advisory),
+      objectField: objectFieldDef(advisory),
+      option: optionDef(advisory),
+      editor: editorDef(advisory),
+      visibleIf: visibleIfDef(advisory),
+      blocks: blocksDef(advisory),
+      blockType: blockTypeDef(advisory),
+      preset: presetDef(advisory),
+      presetBlock: presetBlockDef(advisory),
+      migration: migrationDef(),
+      settingLocation: settingLocationDef(),
+      migrationBlock: migrationBlockDef(),
     },
   };
   if (advisory) {
@@ -418,8 +697,10 @@ function sectionSchema({ advisory }) {
   return schema;
 }
 
-emit("schemas/section.schema.json", sectionSchema({ advisory: false }));
-emit("schemas/section.advisory.schema.json", sectionSchema({ advisory: true }));
+const sectionStrict = sectionSchema({ advisory: false });
+const sectionAdvisory = sectionSchema({ advisory: true });
+emit("schemas/section.schema.json", sectionStrict);
+emit("schemas/section.advisory.schema.json", sectionAdvisory);
 
 // ---------------------------------------------------------------------------
 // theme.json
@@ -567,7 +848,56 @@ emit("schemas/template.schema.json", {
 // ---------------------------------------------------------------------------
 // config/settings_schema.json, config/presets/*.json, config/metafields.json
 
-emit("schemas/settings-schema.schema.json", {
+// The same SettingDef as section settings, with the theme setting types. Every setting is
+// checked here, with or without `editor` (ParseSettingsSchema).
+function themeSettingDef() {
+  const d = settingDef(false);
+  d.required = ["id", "type"];
+  d.properties.id = { type: "string", minLength: 1, pattern: "\\S", description: "Unique in the file. Sections and theme tokens read settings.<id>." };
+  d.properties.type = {
+    type: "string",
+    ...enumOf(contract.theme_setting_types, (t) => themeSettingTypeDocs[t]),
+    markdownDescription: "The setting type, which decides the editor control.",
+  };
+  d.properties.default = { description: "The value a new store starts with." };
+  d.properties.fields = {
+    type: "array",
+    items: { $ref: "#/definitions/objectField" },
+    markdownDescription: "For `color_scheme_group`: the palette keys every scheme has, each a CSS identifier (`a-z`, `0-9`, `-`, `_`).",
+  };
+  delete d.defaultSnippets;
+  const when = (type, then) => ({ if: { properties: { type: { const: type } }, required: ["type"] }, then });
+  d.allOf = [
+    when("select", { required: ["options"], properties: { options: { minItems: 1 } } }),
+    when("color_scheme_group", {
+      required: ["fields"],
+      properties: { fields: { minItems: 1, items: { properties: { key: { pattern: "^[a-z0-9_-]+$" } } } } },
+    }),
+  ];
+  return d;
+}
+
+function themeMigrationDef() {
+  const location = { $ref: "#/definitions/themeSettingLocation" };
+  return {
+    type: "object",
+    required: ["id", "op", "from"],
+    markdownDescription: "Carries stores' saved values when a theme setting is renamed (`rename_setting`, `from` and `to`) or dropped on purpose (`remove_setting`, `from`).",
+    properties: {
+      id: { type: "string", minLength: 1, pattern: "\\S", description: "Unique among the migrations." },
+      op: { type: "string", ...enumOf(["rename_setting", "remove_setting"], (o) => opDocs[o]) },
+      from: location,
+      to: location,
+    },
+    additionalProperties: false,
+    allOf: [
+      { if: { properties: { op: { const: "rename_setting" } }, required: ["op"] }, then: { required: ["to"] } },
+      { if: { properties: { op: { const: "remove_setting" } }, required: ["op"] }, then: forbid(["to"], "remove_setting takes only from.") },
+    ],
+  };
+}
+
+const settingsSchemaDoc = {
   $schema: "http://json-schema.org/draft-07/schema#",
   $id: "https://github.com/tringify/vscode-vascula/schemas/settings-schema.schema.json",
   title: "Tringify global theme settings",
@@ -575,53 +905,34 @@ emit("schemas/settings-schema.schema.json", {
   type: ["object", "array"],
   if: { type: "object", required: ["settings"] },
   then: {
+    required: ["schema_version"],
     properties: {
-      schema_version: { type: "integer", description: "The settings schema version." },
-      settings: {
+      schema_version: {
+        type: "integer",
+        const: platform.values.settingsSchemaVersion,
+        description: `The settings schema version: ${platform.values.settingsSchemaVersion}.`,
+      },
+      settings: { type: "array", items: { $ref: "#/definitions/setting" } },
+      migrations: {
         type: "array",
-        items: {
-          type: "object",
-          required: ["id", "type"],
-          properties: {
-            id: { type: "string", minLength: 1, description: "The template reads settings.<id> in theme tokens and sections." },
-            type: {
-              anyOf: [
-                enumOf([...contract.setting_types, "color_scheme_group", "font_picker"], (t) =>
-                  t === "color_scheme_group"
-                    ? "The theme's colour schemes: a list of schemes with an `id`, `label` and `colors`, described by `fields`."
-                    : t === "font_picker"
-                      ? "A font from the platform's font list."
-                      : settingTypeDocs[t],
-                ),
-                { type: "string" },
-              ],
-            },
-            default: {},
-            editor: {
-              type: "object",
-              properties: { label: { type: "string" }, group: { type: "string" } },
-            },
-            options: {
-              type: "array",
-              items: { type: "object", required: ["value", "label"], properties: { value: {}, label: { type: "string" } } },
-            },
-            fields: { type: "array", items: { type: "object", properties: { key: { type: "string" }, label: { type: "string" } } } },
-            min: { type: "number" },
-            max: { type: "number" },
-            step: { type: "number" },
-            unit: { type: "string" },
-          },
-          allOf: [
-            {
-              if: { properties: { type: { const: "range" } }, required: ["type"] },
-              then: { required: ["min", "max"] },
-            },
-          ],
-        },
+        items: { $ref: "#/definitions/migration" },
+        markdownDescription: "Carry stores' saved values across a renamed or removed theme setting.",
       },
     },
   },
-});
+  definitions: {
+    setting: themeSettingDef(),
+    objectField: objectFieldDef(false),
+    option: optionDef(false),
+    editor: editorDef(false),
+    visibleIf: visibleIfDef(false),
+    migration: themeMigrationDef(),
+    themeSettingLocation: { ...settingLocationDef(), properties: { setting: settingLocationDef().properties.setting } },
+  },
+};
+// Theme settings may use any theme setting type in an object field too.
+settingsSchemaDoc.definitions.objectField.properties.type = { type: "string" };
+emit("schemas/settings-schema.schema.json", settingsSchemaDoc);
 
 emit("schemas/preset.schema.json", {
   $schema: "http://json-schema.org/draft-07/schema#",
@@ -676,6 +987,109 @@ emit("schemas/metafields.schema.json", {
     ],
   },
 });
+
+// ---------------------------------------------------------------------------
+// Snippets: the setting snippet offers every setting type of the contract
+
+{
+  const path = "snippets/vascula.code-snippets";
+  const text = readFileSync(join(root, path), "utf8");
+  const re = /("Setting": \{[\s\S]*?\\"type\\": \\"\$\{2\|)([^|]+)(\|\})/;
+  const m = re.exec(text);
+  if (!m) throw new Error(`${path}: the Setting snippet's type choice was not found`);
+  const current = m[2].split(",");
+  const types = [...current.filter((t) => contract.setting_types.includes(t)), ...contract.setting_types.filter((t) => !current.includes(t))];
+  outputs.set(path, text.replace(re, `$1${types.join(",")}$3`));
+}
+
+// ---------------------------------------------------------------------------
+// Filters: data/filters.json documents exactly the filters a theme may call
+
+{
+  const documented = JSON.parse(readFileSync(join(root, "data/filters.json"), "utf8")).filters;
+  // In the theme check's StorefrontFilters, but not on the platform filters page and not in
+  // the storefront's HostFilters source this was checked against, so there is nothing
+  // reliable to document. Completion does not offer them; the theme check accepts them.
+  const UNDOCUMENTED = ["amount", "currency_code", "price"];
+  const builtins = new Set(platform.values.vasculaBuiltinFilters);
+  const storefront = new Set(platform.values.StorefrontFilters);
+  const problems = [];
+  for (const f of documented) {
+    if (f.source === "vascula" && !builtins.has(f.name)) problems.push(`${f.name} is not a Vascula built-in filter`);
+    if (f.source === "tringify" && !storefront.has(f.name)) problems.push(`${f.name} is not in StorefrontFilters`);
+  }
+  const names = new Set(documented.map((f) => f.name));
+  for (const n of [...builtins, ...storefront]) {
+    if (!names.has(n) && !UNDOCUMENTED.includes(n)) problems.push(`${n} is a filter themes may call, but data/filters.json does not document it`);
+  }
+  for (const n of UNDOCUMENTED) {
+    if (!storefront.has(n)) problems.push(`${n} is no longer in StorefrontFilters; remove it from UNDOCUMENTED`);
+    if (names.has(n)) problems.push(`${n} is documented now; remove it from UNDOCUMENTED`);
+  }
+  if (problems.length) {
+    console.error("data/filters.json disagrees with data/platform-fields.json:\n  " + problems.join("\n  "));
+    process.exit(1);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The schemas against the platform's structs (data/platform-fields.json)
+//
+// Each schema object must list exactly the struct's JSON fields, with the JSON type the
+// upload decodes them as. A field the platform adds, drops or retypes fails here until
+// the schema above describes it.
+
+function checkPlatformFields() {
+  const problems = [];
+  const jsonType = (go) => {
+    const g = go.replace(/^\*/, "");
+    if (g === "string") return { type: "string" };
+    if (g === "bool") return { type: "boolean" };
+    if (/^u?int(8|16|32|64)?$/.test(g)) return { type: "integer" };
+    if (/^float(32|64)$/.test(g)) return { type: "number" };
+    if (g.startsWith("[]")) return { type: "array", items: jsonType(g.slice(2)) };
+    if (g.startsWith("map[")) return { type: "object" };
+    if (g === "interface{}" || g === "any" || g === "json.RawMessage") return {};
+    return { type: "object", struct: g };
+  };
+  const deref = (doc, s) => (s && s.$ref ? doc.definitions[s.$ref.replace("#/definitions/", "")] : s);
+  // subset: structs the schema deliberately narrows (theme setting migrations take only
+  // rename_setting and remove_setting, without block_type): no field may be missing from
+  // the struct, but struct fields may be left out.
+  const compare = (where, doc, schema, struct, seen = new Set(), subset = new Set()) => {
+    const key = where.split(" ")[0] + ":" + struct;
+    if (seen.has(key)) return;
+    seen.add(key);
+    const fields = platform.structs[struct];
+    if (!fields) return problems.push(`${where}: no struct ${struct} in data/platform-fields.json`);
+    const props = schema.properties || {};
+    const names = fields.map((f) => f.name);
+    if (!subset.has(struct)) for (const n of names) if (!(n in props)) problems.push(`${where}: ${struct}.${n} is not in the schema`);
+    for (const n of Object.keys(props)) if (!names.includes(n)) problems.push(`${where}: "${n}" is not a field of ${struct}`);
+    for (const f of fields) {
+      const p = props[f.name];
+      if (!p) continue;
+      const want = jsonType(f.go);
+      const got = deref(doc, p);
+      if (want.type && got.type !== want.type) problems.push(`${where}: ${struct}.${f.name} is ${f.go}, so the schema type is ${want.type}, not ${got.type}`);
+      if (want.struct) compare(`${where} ${f.name}`, doc, got, want.struct, seen, subset);
+      if (want.items) {
+        const items = deref(doc, got.items || {});
+        if (want.items.type && items.type !== want.items.type) problems.push(`${where}: ${struct}.${f.name} items are ${want.items.type}, not ${items.type}`);
+        if (want.items.struct) compare(`${where} ${f.name}[]`, doc, items, want.items.struct, seen, subset);
+      }
+    }
+  };
+  for (const [name, doc] of [["section.schema.json", sectionStrict], ["section.advisory.schema.json", sectionAdvisory]]) {
+    compare(name, doc, doc, "sectionSchema");
+  }
+  compare("settings-schema.schema.json", settingsSchemaDoc, settingsSchemaDoc.then, "SettingsSchema", new Set(), new Set(["Migration", "SettingLocation"]));
+  if (problems.length) {
+    console.error("The schemas disagree with data/platform-fields.json:\n  " + [...new Set(problems)].join("\n  "));
+    process.exit(1);
+  }
+}
+checkPlatformFields();
 
 // ---------------------------------------------------------------------------
 // Write or check

@@ -14,6 +14,7 @@
       "markdownDescription": "The section's name, unique in the theme. A theme block's name matches its file name."
     },
     "kind": {
+      "type": "string",
       "enum": [
         "section",
         "layout",
@@ -24,11 +25,12 @@
         "A section merchants place on a page (default).",
         "A section for a global surface such as the header or footer. Declares a `target`.",
         "A section for the overlay layer, such as a cart drawer or popup. Declares a `target`.",
-        "A theme block in `blocks/`. No `target` and no presets."
+        "A theme block in `blocks/`. No `target`, presets or `preview_image`."
       ],
       "markdownDescription": "`section` (default), `layout`, `embed` or `block`.\n\n[Documentation](https://dev-docs.tringify.com/themes/sections#section-kinds)"
     },
     "target": {
+      "type": "string",
       "enum": [
         "global_body_start",
         "global_body_end",
@@ -45,15 +47,26 @@
       "type": "string",
       "description": "The icon shown for the section in the editor."
     },
+    "preview_image": {
+      "type": "string",
+      "pattern": "^assets/[A-Za-z0-9_.-]*[A-Za-z0-9_-][A-Za-z0-9_.-]*\\.(?:[Pp][Nn][Gg]|[Jj][Pp][Ee]?[Gg]|[Ww][Ee][Bb][Pp]|[Gg][Ii][Ff])$",
+      "errorMessage": "A theme image asset path such as assets/header-preview.png (.png, .jpg, .jpeg, .webp or .gif).",
+      "markdownDescription": "A theme image (`assets/<name>.png`, `.jpg`, `.jpeg`, `.webp` or `.gif`) the editor shows for this section where merchants choose between interchangeable sections. Not for theme blocks."
+    },
     "ctx_needs": {
       "type": "array",
       "uniqueItems": true,
       "markdownDescription": "The store data the section reads. Declare a root such as `product`, or a dotted need such as `cart.item_count`. A section can read only what it declares.\n\n[Documentation](https://dev-docs.tringify.com/ctx/runtime-context)",
       "items": {
         "type": "string",
-        "pattern": "^(auth_form|auth_notice|blog|blog_category|blog_post|blog_recent|brand|breadcrumbs|cart|category|collection|consent|csrf_token|customer|customer_settings|filters|form_error|form_notice|forms|list|localization|localization_prompt|menus|page|pages|phone_countries|policies|policy|product|products|recently_viewed|restock_notifications|review_notice|reviews|routes|search|shop|store_reviews|vendor|wishlist)(\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+        "pattern": "^(age_gate|auth_form|auth_notice|back_in_stock_for_you|blog|blog_category|blog_post|blog_recent|brand|breadcrumbs|cart|category|collection|consent|csrf_token|customer|customer_settings|design_mode|express|filters|form_error|form_notice|forms|gift_card|list|localization|localization_prompt|menus|new_in_your_brands|page|pages|phone_countries|picked_for_you|policies|policy|product|products|recently_viewed|restock_notifications|reviews|routes|search|shop|shopping|still_thinking|store_reviews|theme_preview|vendor|wishlist)(\\.[A-Za-z_][A-Za-z0-9_]*)*$",
         "errorMessage": "Unknown CTX name. A ctx_needs entry is a CTX root, such as product or cart, optionally followed by a field: cart.item_count.",
         "defaultSnippets": [
+          {
+            "label": "age_gate",
+            "markdownDescription": "The store's age gate for this visitor: show is true when the gate applies to the visitor's country. Copy is already in the shopper's language, with the minimum age filled in. Render the gate as the global_overlay section age-gate, and render it only when ctx.age_gate.show is true: the platform adds its gate runtime only then, so a gate rendered while show is false can never be dismissed. Give its root data-tf-age-gate, role=\"dialog\", aria-modal=\"true\" and an aria-labelledby heading, and mark the buttons data-tf-age-gate-confirm and data-tf-age-gate-decline. The platform hides it before first paint for visitors who already confirmed, traps focus, stores the answer for remember_days days (0: the browser session) and handles declining (decline_url, or its own come-back-later screen when decline_url is empty). Keep the page content in the HTML. If the theme renders no age-gate section, the platform adds a plain one. Available on every page.",
+            "body": "age_gate"
+          },
           {
             "label": "auth_form",
             "markdownDescription": "Safe hosted-auth form replay state after a submission. Present after a hosted form submission.",
@@ -63,6 +76,11 @@
             "label": "auth_notice",
             "markdownDescription": "A localized sign-in or registration status message. Present after a hosted form submission.",
             "body": "auth_notice"
+          },
+          {
+            "label": "back_in_stock_for_you",
+            "markdownDescription": "Products this visitor viewed while they were sold out that can be bought again, the ones on their wishlist first, leaving out what they bought. Only for visitors who allow personalization; empty for everyone else. Requested data, available on normal storefront pages.",
+            "body": "back_in_stock_for_you"
           },
           {
             "label": "blog",
@@ -91,12 +109,12 @@
           },
           {
             "label": "breadcrumbs",
-            "markdownDescription": "The platform-resolved entity trail. Themes may prepend their localized Home link. Provided on its pages.",
+            "markdownDescription": "The platform-resolved entity trail (items, last one current) and home, the store root named as the store is named, so a theme renders home then items in every language. Provided on its pages.",
             "body": "breadcrumbs"
           },
           {
             "label": "cart",
-            "markdownDescription": "The current cart. Header use receives counts; rich cart surfaces receive line, price, discount, limit, and shipping data. Requested data, available on normal storefront pages.",
+            "markdownDescription": "The current cart. Header use receives counts; rich cart surfaces receive line, price, discount, limit, and shipping data. A line whose product or variant can no longer be bought here (deleted, archived, unpublished, variant removed) is removed from the cart when a rich surface reads it; item_count then counts only the lines shown, and form_notice tells the shopper once. Requested data, available on normal storefront pages.",
             "body": "cart"
           },
           {
@@ -121,13 +139,23 @@
           },
           {
             "label": "customer",
-            "markdownDescription": "The signed-in shopper and, when requested, their account addresses, orders, and routed receipt. Requested; provided on `account` pages.",
+            "markdownDescription": "The signed-in shopper and, when requested, their account addresses, orders, Gift Cards, and routed receipt. Requested; provided on `account` pages.",
             "body": "customer"
           },
           {
             "label": "customer_settings",
             "markdownDescription": "Storefront-safe account, sign-in, registration, consent, and customer feature settings. Requested data, available on normal storefront pages.",
             "body": "customer_settings"
+          },
+          {
+            "label": "design_mode",
+            "markdownDescription": "True while the theme editor renders the page for the merchant, false for shoppers. Use it to show placeholders for content the merchant has not chosen yet, and render nothing for shoppers instead. Available on every page.",
+            "body": "design_mode"
+          },
+          {
+            "label": "express",
+            "markdownDescription": "Express checkout (wallet buttons such as Apple Pay and Google Pay) for the purchase on this page: on a product page the routed product's selected variant and quantity (the cart is untouched), on the cart page the cart, and in global chrome (a cart drawer) the cart on every page, refreshed with the drawer. Print ctx.express.slot where the buttons go, typically in an \"Express checkout\" block under Add to cart or Checkout, and nothing else for it. The slot is platform markup that the platform's own script turns into wallet buttons: themes never contain wallet code and must not restyle, move or remove its children. On a product page the script reads the selected variant and quantity from the page's cart_add form for ctx.product.id, and hides the buttons while a selection cannot use express checkout (variant_reasons, keyed by variant id) or the form carries line properties. When available is false the slot is empty; reason (a code) and reason_label (in the shopper's language) say why, for the theme editor or a short note. The buttons also stay hidden on a device without a wallet. Nothing here varies per visitor beyond market, currency, language and shopping mode, so pages stay cacheable. Requested data, available on normal storefront pages.",
+            "body": "express"
           },
           {
             "label": "filters",
@@ -150,6 +178,11 @@
             "body": "forms"
           },
           {
+            "label": "gift_card",
+            "markdownDescription": "One Gift Card on the store's Gift Card page: null until a balance check succeeds in this request, or filled from the card's view link with its full code. After a failed check, or for a view link that opens nothing, it is null and ctx.form_error carries one message to show as given. Provided on `gift_card` pages.",
+            "body": "gift_card"
+          },
+          {
             "label": "list",
             "markdownDescription": "The generic vendor, brand, collection, or category index for the routed list page. Provided on `vendor_list`, `brand_list`, `collection_list`, `category_list` pages.",
             "body": "list"
@@ -170,6 +203,11 @@
             "body": "menus"
           },
           {
+            "label": "new_in_your_brands",
+            "markdownDescription": "The newest products of the brands this visitor viewed, bought and saved, leaving out those products. Only for visitors who allow personalization; the rest of the list, or all of it without a brand, is the store's newest products. personal is true when at least one item comes from the visitor's brands. placement is the recommendation placement to send with a click (new_in_your_brands, or new_in_your_brands_newest without a personal item). Requested data, available on normal storefront pages.",
+            "body": "new_in_your_brands"
+          },
+          {
             "label": "page",
             "markdownDescription": "The routed published content page. Provided on `page` pages.",
             "body": "page"
@@ -181,8 +219,13 @@
           },
           {
             "label": "phone_countries",
-            "markdownDescription": "Localized phone country options allowed by the store's customer settings. Requested data, available on normal storefront pages.",
+            "markdownDescription": "Localized phone country options allowed by the store's customer settings, sorted by name. min_digits and max_digits bound the national number (digits after the dial code); the server refuses any number that is not valid for its country. Requested data, available on normal storefront pages.",
             "body": "phone_countries"
+          },
+          {
+            "label": "picked_for_you",
+            "markdownDescription": "Products picked for this visitor from the brands and categories they viewed and bought, best sellers first, leaving out what they bought and the products in Recently viewed. Only for visitors who allow personalization; the rest of the list, or all of it without a personal pick, is the store's best sellers. personal is true when at least one item is a personal pick. placement is the recommendation placement to send with a click (picked_for_you, or picked_for_you_best_sellers without a personal pick). Requested data, available on normal storefront pages.",
+            "body": "picked_for_you"
           },
           {
             "label": "policies",
@@ -215,11 +258,6 @@
             "body": "restock_notifications"
           },
           {
-            "label": "review_notice",
-            "markdownDescription": "Legacy alias of form_notice retained for installed theme compatibility. Present after a hosted form submission.",
-            "body": "review_notice"
-          },
-          {
             "label": "reviews",
             "markdownDescription": "Product review availability, aggregates, filters, and approved review rows. Requested; provided on `product` pages.",
             "body": "reviews"
@@ -240,9 +278,24 @@
             "body": "shop"
           },
           {
+            "label": "shopping",
+            "markdownDescription": "How the shopper is shopping: delivery, or pickup at one store location. In pickup mode every stock figure (product, card, filter, search, cart) is that location's stock, and checkout skips shipping. Switch with the shopping_mode_set action; shop.pickup_locations lists the locations offered to this shopper. A pickup location outside the shopper's market (or one that stopped offering pickup) resets the mode to delivery; on that request notice carries the message to show the shopper, and is null otherwise. In pickup mode catalog_notice names the location the catalog is shown for (\"Showing products stocked at …\" when pickup_location.stocked_only, else \"Showing stock at …\"): show it with a way to change the location wherever products are listed; it is null for delivery. Available on every page.",
+            "body": "shopping"
+          },
+          {
+            "label": "still_thinking",
+            "markdownDescription": "Products this visitor viewed and did not add to their cart or buy since, most recently viewed first, leaving out the product on the page: the browse-recovery reminder shown on the site. Only for visitors who allow personalization; empty for everyone else. Requested data, available on normal storefront pages.",
+            "body": "still_thinking"
+          },
+          {
             "label": "store_reviews",
             "markdownDescription": "Store-wide approved reviews with product links and pagination. Requested data, available on normal storefront pages.",
             "body": "store_reviews"
+          },
+          {
+            "label": "theme_preview",
+            "markdownDescription": "True when the page renders sample content in a theme preview (the theme store demo and the theme tooling preview), false on a store. Use it for a theme's own sample artwork where a merchant setting is empty; a store shows nothing there instead. Available on every page.",
+            "body": "theme_preview"
           },
           {
             "label": "vendor",
@@ -253,6 +306,51 @@
             "label": "wishlist",
             "markdownDescription": "The visitor's wishlist state and, for rich surfaces, its sellable product rows. Requested data, available on normal storefront pages.",
             "body": "wishlist"
+          },
+          {
+            "label": "age_gate.body",
+            "markdownDescription": "Only `body` of `age_gate`.",
+            "body": "age_gate.body"
+          },
+          {
+            "label": "age_gate.confirm_label",
+            "markdownDescription": "Only `confirm_label` of `age_gate`.",
+            "body": "age_gate.confirm_label"
+          },
+          {
+            "label": "age_gate.decline_label",
+            "markdownDescription": "Only `decline_label` of `age_gate`.",
+            "body": "age_gate.decline_label"
+          },
+          {
+            "label": "age_gate.decline_url",
+            "markdownDescription": "Only `decline_url` of `age_gate`.",
+            "body": "age_gate.decline_url"
+          },
+          {
+            "label": "age_gate.enabled",
+            "markdownDescription": "Only `enabled` of `age_gate`.",
+            "body": "age_gate.enabled"
+          },
+          {
+            "label": "age_gate.heading",
+            "markdownDescription": "Only `heading` of `age_gate`.",
+            "body": "age_gate.heading"
+          },
+          {
+            "label": "age_gate.min_age",
+            "markdownDescription": "Only `min_age` of `age_gate`.",
+            "body": "age_gate.min_age"
+          },
+          {
+            "label": "age_gate.remember_days",
+            "markdownDescription": "Only `remember_days` of `age_gate`.",
+            "body": "age_gate.remember_days"
+          },
+          {
+            "label": "age_gate.show",
+            "markdownDescription": "Only `show` of `age_gate`.",
+            "body": "age_gate.show"
           },
           {
             "label": "auth_form.email",
@@ -318,6 +416,21 @@
             "label": "auth_notice.request_id",
             "markdownDescription": "Only `request_id` of `auth_notice`.",
             "body": "auth_notice.request_id"
+          },
+          {
+            "label": "back_in_stock_for_you.items",
+            "markdownDescription": "Only `items` of `back_in_stock_for_you`.",
+            "body": "back_in_stock_for_you.items"
+          },
+          {
+            "label": "blog.archives",
+            "markdownDescription": "Only `archives` of `blog`.",
+            "body": "blog.archives"
+          },
+          {
+            "label": "blog.feed_urls",
+            "markdownDescription": "Only `feed_urls` of `blog`.",
+            "body": "blog.feed_urls"
           },
           {
             "label": "blog.items",
@@ -395,6 +508,11 @@
             "body": "blog_post.comment_count"
           },
           {
+            "label": "blog_post.comment_submission_id",
+            "markdownDescription": "Only `comment_submission_id` of `blog_post`.",
+            "body": "blog_post.comment_submission_id"
+          },
+          {
             "label": "blog_post.comments",
             "markdownDescription": "Only `comments` of `blog_post`.",
             "body": "blog_post.comments"
@@ -408,6 +526,16 @@
             "label": "blog_post.comments_login_required",
             "markdownDescription": "Only `comments_login_required` of `blog_post`.",
             "body": "blog_post.comments_login_required"
+          },
+          {
+            "label": "blog_post.comments_name_required",
+            "markdownDescription": "Only `comments_name_required` of `blog_post`.",
+            "body": "blog_post.comments_name_required"
+          },
+          {
+            "label": "blog_post.comments_pagination",
+            "markdownDescription": "Only `comments_pagination` of `blog_post`.",
+            "body": "blog_post.comments_pagination"
           },
           {
             "label": "blog_post.comments_total",
@@ -430,6 +558,11 @@
             "body": "blog_post.featured_image"
           },
           {
+            "label": "blog_post.feed_urls",
+            "markdownDescription": "Only `feed_urls` of `blog_post`.",
+            "body": "blog_post.feed_urls"
+          },
+          {
             "label": "blog_post.metafields",
             "markdownDescription": "Only `metafields` of `blog_post`.",
             "body": "blog_post.metafields"
@@ -438,6 +571,16 @@
             "label": "blog_post.published_at",
             "markdownDescription": "Only `published_at` of `blog_post`.",
             "body": "blog_post.published_at"
+          },
+          {
+            "label": "blog_post.published_at_iso",
+            "markdownDescription": "Only `published_at_iso` of `blog_post`.",
+            "body": "blog_post.published_at_iso"
+          },
+          {
+            "label": "blog_post.related_posts",
+            "markdownDescription": "Only `related_posts` of `blog_post`.",
+            "body": "blog_post.related_posts"
           },
           {
             "label": "blog_post.seo_description",
@@ -463,6 +606,11 @@
             "label": "blog_post.title",
             "markdownDescription": "Only `title` of `blog_post`.",
             "body": "blog_post.title"
+          },
+          {
+            "label": "blog_post.updated_at_iso",
+            "markdownDescription": "Only `updated_at_iso` of `blog_post`.",
+            "body": "blog_post.updated_at_iso"
           },
           {
             "label": "brand.description",
@@ -515,6 +663,11 @@
             "body": "brand.url"
           },
           {
+            "label": "breadcrumbs.home",
+            "markdownDescription": "Only `home` of `breadcrumbs`.",
+            "body": "breadcrumbs.home"
+          },
+          {
             "label": "breadcrumbs.items",
             "markdownDescription": "Only `items` of `breadcrumbs`.",
             "body": "breadcrumbs.items"
@@ -528,6 +681,11 @@
             "label": "cart.checkout_limits",
             "markdownDescription": "Only `checkout_limits` of `cart`.",
             "body": "cart.checkout_limits"
+          },
+          {
+            "label": "cart.checkout_ready",
+            "markdownDescription": "Only `checkout_ready` of `cart`.",
+            "body": "cart.checkout_ready"
           },
           {
             "label": "cart.coupon_codes",
@@ -575,6 +733,16 @@
             "body": "cart.gift_offers"
           },
           {
+            "label": "cart.inactive_coupons",
+            "markdownDescription": "Only `inactive_coupons` of `cart`.",
+            "body": "cart.inactive_coupons"
+          },
+          {
+            "label": "cart.issues",
+            "markdownDescription": "Only `issues` of `cart`.",
+            "body": "cart.issues"
+          },
+          {
             "label": "cart.item_count",
             "markdownDescription": "Only `item_count` of `cart`.",
             "body": "cart.item_count"
@@ -583,6 +751,46 @@
             "label": "cart.items",
             "markdownDescription": "Only `items` of `cart`.",
             "body": "cart.items"
+          },
+          {
+            "label": "cart.mode",
+            "markdownDescription": "Only `mode` of `cart`.",
+            "body": "cart.mode"
+          },
+          {
+            "label": "cart.note",
+            "markdownDescription": "Only `note` of `cart`.",
+            "body": "cart.note"
+          },
+          {
+            "label": "cart.note_max_length",
+            "markdownDescription": "Only `note_max_length` of `cart`.",
+            "body": "cart.note_max_length"
+          },
+          {
+            "label": "cart.optional_fees",
+            "markdownDescription": "Only `optional_fees` of `cart`.",
+            "body": "cart.optional_fees"
+          },
+          {
+            "label": "cart.pickup_location",
+            "markdownDescription": "Only `pickup_location` of `cart`.",
+            "body": "cart.pickup_location"
+          },
+          {
+            "label": "cart.price_note",
+            "markdownDescription": "Only `price_note` of `cart`.",
+            "body": "cart.price_note"
+          },
+          {
+            "label": "cart.price_notes",
+            "markdownDescription": "Only `price_notes` of `cart`.",
+            "body": "cart.price_notes"
+          },
+          {
+            "label": "cart.shipping_estimate",
+            "markdownDescription": "Only `shipping_estimate` of `cart`.",
+            "body": "cart.shipping_estimate"
           },
           {
             "label": "cart.subtotal",
@@ -598,6 +806,16 @@
             "label": "cart.unique_item_count",
             "markdownDescription": "Only `unique_item_count` of `cart`.",
             "body": "cart.unique_item_count"
+          },
+          {
+            "label": "category.ancestors",
+            "markdownDescription": "Only `ancestors` of `category`.",
+            "body": "category.ancestors"
+          },
+          {
+            "label": "category.children",
+            "markdownDescription": "Only `children` of `category`.",
+            "body": "category.children"
           },
           {
             "label": "category.description",
@@ -625,14 +843,44 @@
             "body": "category.name"
           },
           {
+            "label": "category.parent",
+            "markdownDescription": "Only `parent` of `category`.",
+            "body": "category.parent"
+          },
+          {
             "label": "category.product_count",
             "markdownDescription": "Only `product_count` of `category`.",
             "body": "category.product_count"
           },
           {
+            "label": "category.seo_description",
+            "markdownDescription": "Only `seo_description` of `category`.",
+            "body": "category.seo_description"
+          },
+          {
+            "label": "category.seo_title",
+            "markdownDescription": "Only `seo_title` of `category`.",
+            "body": "category.seo_title"
+          },
+          {
             "label": "category.slug",
             "markdownDescription": "Only `slug` of `category`.",
             "body": "category.slug"
+          },
+          {
+            "label": "category.url",
+            "markdownDescription": "Only `url` of `category`.",
+            "body": "category.url"
+          },
+          {
+            "label": "collection.ancestors",
+            "markdownDescription": "Only `ancestors` of `collection`.",
+            "body": "collection.ancestors"
+          },
+          {
+            "label": "collection.children",
+            "markdownDescription": "Only `children` of `collection`.",
+            "body": "collection.children"
           },
           {
             "label": "collection.description",
@@ -660,14 +908,34 @@
             "body": "collection.name"
           },
           {
+            "label": "collection.parent",
+            "markdownDescription": "Only `parent` of `collection`.",
+            "body": "collection.parent"
+          },
+          {
             "label": "collection.product_count",
             "markdownDescription": "Only `product_count` of `collection`.",
             "body": "collection.product_count"
           },
           {
+            "label": "collection.seo_description",
+            "markdownDescription": "Only `seo_description` of `collection`.",
+            "body": "collection.seo_description"
+          },
+          {
+            "label": "collection.seo_title",
+            "markdownDescription": "Only `seo_title` of `collection`.",
+            "body": "collection.seo_title"
+          },
+          {
             "label": "collection.slug",
             "markdownDescription": "Only `slug` of `collection`.",
             "body": "collection.slug"
+          },
+          {
+            "label": "collection.url",
+            "markdownDescription": "Only `url` of `collection`.",
+            "body": "collection.url"
           },
           {
             "label": "consent.available_categories",
@@ -693,6 +961,11 @@
             "label": "customer.accepts_marketing",
             "markdownDescription": "Only `accepts_marketing` of `customer`.",
             "body": "customer.accepts_marketing"
+          },
+          {
+            "label": "customer.accepts_text_marketing",
+            "markdownDescription": "Only `accepts_text_marketing` of `customer`.",
+            "body": "customer.accepts_text_marketing"
           },
           {
             "label": "customer.account_url",
@@ -740,6 +1013,11 @@
             "body": "customer.first_name"
           },
           {
+            "label": "customer.gift_cards",
+            "markdownDescription": "Only `gift_cards` of `customer`.",
+            "body": "customer.gift_cards"
+          },
+          {
             "label": "customer.id",
             "markdownDescription": "Only `id` of `customer`.",
             "body": "customer.id"
@@ -780,9 +1058,19 @@
             "body": "customer.phone"
           },
           {
+            "label": "customer.phone_display",
+            "markdownDescription": "Only `phone_display` of `customer`.",
+            "body": "customer.phone_display"
+          },
+          {
             "label": "customer.phone_verified",
             "markdownDescription": "Only `phone_verified` of `customer`.",
             "body": "customer.phone_verified"
+          },
+          {
+            "label": "customer.store_credit",
+            "markdownDescription": "Only `store_credit` of `customer`.",
+            "body": "customer.store_credit"
           },
           {
             "label": "customer_settings.account_mode",
@@ -793,11 +1081,6 @@
             "label": "customer_settings.account_url",
             "markdownDescription": "Only `account_url` of `customer_settings`.",
             "body": "customer_settings.account_url"
-          },
-          {
-            "label": "customer_settings.accounts_available",
-            "markdownDescription": "Only `accounts_available` of `customer_settings`.",
-            "body": "customer_settings.accounts_available"
           },
           {
             "label": "customer_settings.collect_checkout_marketing_consent",
@@ -828,6 +1111,11 @@
             "label": "customer_settings.guest_cart_duration_days",
             "markdownDescription": "Only `guest_cart_duration_days` of `customer_settings`.",
             "body": "customer_settings.guest_cart_duration_days"
+          },
+          {
+            "label": "customer_settings.guest_checkout_available",
+            "markdownDescription": "Only `guest_checkout_available` of `customer_settings`.",
+            "body": "customer_settings.guest_checkout_available"
           },
           {
             "label": "customer_settings.guest_wishlist_duration_days",
@@ -890,6 +1178,16 @@
             "body": "customer_settings.require_newsletter_double_opt_in"
           },
           {
+            "label": "customer_settings.text_marketing_available",
+            "markdownDescription": "Only `text_marketing_available` of `customer_settings`.",
+            "body": "customer_settings.text_marketing_available"
+          },
+          {
+            "label": "customer_settings.text_marketing_consent_label",
+            "markdownDescription": "Only `text_marketing_consent_label` of `customer_settings`.",
+            "body": "customer_settings.text_marketing_consent_label"
+          },
+          {
             "label": "customer_settings.wishlist_enabled",
             "markdownDescription": "Only `wishlist_enabled` of `customer_settings`.",
             "body": "customer_settings.wishlist_enabled"
@@ -900,6 +1198,41 @@
             "body": "customer_settings.wishlist_max_items"
           },
           {
+            "label": "express.available",
+            "markdownDescription": "Only `available` of `express`.",
+            "body": "express.available"
+          },
+          {
+            "label": "express.reason",
+            "markdownDescription": "Only `reason` of `express`.",
+            "body": "express.reason"
+          },
+          {
+            "label": "express.reason_label",
+            "markdownDescription": "Only `reason_label` of `express`.",
+            "body": "express.reason_label"
+          },
+          {
+            "label": "express.slot",
+            "markdownDescription": "Only `slot` of `express`.",
+            "body": "express.slot"
+          },
+          {
+            "label": "express.source",
+            "markdownDescription": "Only `source` of `express`.",
+            "body": "express.source"
+          },
+          {
+            "label": "express.variant_reasons",
+            "markdownDescription": "Only `variant_reasons` of `express`.",
+            "body": "express.variant_reasons"
+          },
+          {
+            "label": "express.wallets",
+            "markdownDescription": "Only `wallets` of `express`.",
+            "body": "express.wallets"
+          },
+          {
             "label": "filters.applied_count",
             "markdownDescription": "Only `applied_count` of `filters`.",
             "body": "filters.applied_count"
@@ -908,6 +1241,16 @@
             "label": "filters.clear_url",
             "markdownDescription": "Only `clear_url` of `filters`.",
             "body": "filters.clear_url"
+          },
+          {
+            "label": "filters.count_label",
+            "markdownDescription": "Only `count_label` of `filters`.",
+            "body": "filters.count_label"
+          },
+          {
+            "label": "filters.counts_estimated",
+            "markdownDescription": "Only `counts_estimated` of `filters`.",
+            "body": "filters.counts_estimated"
           },
           {
             "label": "filters.inputs",
@@ -975,6 +1318,16 @@
             "body": "form_notice.success"
           },
           {
+            "label": "forms.buy_now",
+            "markdownDescription": "Only `buy_now` of `forms`.",
+            "body": "forms.buy_now"
+          },
+          {
+            "label": "forms.cart_add",
+            "markdownDescription": "Only `cart_add` of `forms`.",
+            "body": "forms.cart_add"
+          },
+          {
             "label": "forms.comment",
             "markdownDescription": "Only `comment` of `forms`.",
             "body": "forms.comment"
@@ -985,6 +1338,11 @@
             "body": "forms.contact"
           },
           {
+            "label": "forms.gift_card",
+            "markdownDescription": "Only `gift_card` of `forms`.",
+            "body": "forms.gift_card"
+          },
+          {
             "label": "forms.newsletter",
             "markdownDescription": "Only `newsletter` of `forms`.",
             "body": "forms.newsletter"
@@ -993,6 +1351,61 @@
             "label": "forms.review",
             "markdownDescription": "Only `review` of `forms`.",
             "body": "forms.review"
+          },
+          {
+            "label": "gift_card.balance",
+            "markdownDescription": "Only `balance` of `gift_card`.",
+            "body": "gift_card.balance"
+          },
+          {
+            "label": "gift_card.code",
+            "markdownDescription": "Only `code` of `gift_card`.",
+            "body": "gift_card.code"
+          },
+          {
+            "label": "gift_card.code_masked",
+            "markdownDescription": "Only `code_masked` of `gift_card`.",
+            "body": "gift_card.code_masked"
+          },
+          {
+            "label": "gift_card.currency",
+            "markdownDescription": "Only `currency` of `gift_card`.",
+            "body": "gift_card.currency"
+          },
+          {
+            "label": "gift_card.expires_at",
+            "markdownDescription": "Only `expires_at` of `gift_card`.",
+            "body": "gift_card.expires_at"
+          },
+          {
+            "label": "gift_card.expires_at_label",
+            "markdownDescription": "Only `expires_at_label` of `gift_card`.",
+            "body": "gift_card.expires_at_label"
+          },
+          {
+            "label": "gift_card.initial_value",
+            "markdownDescription": "Only `initial_value` of `gift_card`.",
+            "body": "gift_card.initial_value"
+          },
+          {
+            "label": "gift_card.message",
+            "markdownDescription": "Only `message` of `gift_card`.",
+            "body": "gift_card.message"
+          },
+          {
+            "label": "gift_card.shop_url",
+            "markdownDescription": "Only `shop_url` of `gift_card`.",
+            "body": "gift_card.shop_url"
+          },
+          {
+            "label": "gift_card.status",
+            "markdownDescription": "Only `status` of `gift_card`.",
+            "body": "gift_card.status"
+          },
+          {
+            "label": "gift_card.status_label",
+            "markdownDescription": "Only `status_label` of `gift_card`.",
+            "body": "gift_card.status_label"
           },
           {
             "label": "list.items",
@@ -1090,6 +1503,21 @@
             "body": "localization_prompt.visitor_country_code"
           },
           {
+            "label": "new_in_your_brands.items",
+            "markdownDescription": "Only `items` of `new_in_your_brands`.",
+            "body": "new_in_your_brands.items"
+          },
+          {
+            "label": "new_in_your_brands.personal",
+            "markdownDescription": "Only `personal` of `new_in_your_brands`.",
+            "body": "new_in_your_brands.personal"
+          },
+          {
+            "label": "new_in_your_brands.placement",
+            "markdownDescription": "Only `placement` of `new_in_your_brands`.",
+            "body": "new_in_your_brands.placement"
+          },
+          {
             "label": "page.content",
             "markdownDescription": "Only `content` of `page`.",
             "body": "page.content"
@@ -1120,9 +1548,34 @@
             "body": "page.title"
           },
           {
+            "label": "picked_for_you.items",
+            "markdownDescription": "Only `items` of `picked_for_you`.",
+            "body": "picked_for_you.items"
+          },
+          {
+            "label": "picked_for_you.personal",
+            "markdownDescription": "Only `personal` of `picked_for_you`.",
+            "body": "picked_for_you.personal"
+          },
+          {
+            "label": "picked_for_you.placement",
+            "markdownDescription": "Only `placement` of `picked_for_you`.",
+            "body": "picked_for_you.placement"
+          },
+          {
             "label": "policy.content",
             "markdownDescription": "Only `content` of `policy`.",
             "body": "policy.content"
+          },
+          {
+            "label": "policy.created_at",
+            "markdownDescription": "Only `created_at` of `policy`.",
+            "body": "policy.created_at"
+          },
+          {
+            "label": "policy.created_at_iso",
+            "markdownDescription": "Only `created_at_iso` of `policy`.",
+            "body": "policy.created_at_iso"
           },
           {
             "label": "policy.seo_description",
@@ -1150,6 +1603,16 @@
             "body": "policy.type"
           },
           {
+            "label": "policy.updated_at",
+            "markdownDescription": "Only `updated_at` of `policy`.",
+            "body": "policy.updated_at"
+          },
+          {
+            "label": "policy.updated_at_iso",
+            "markdownDescription": "Only `updated_at_iso` of `policy`.",
+            "body": "policy.updated_at_iso"
+          },
+          {
             "label": "product.available_for_sale",
             "markdownDescription": "Only `available_for_sale` of `product`.",
             "body": "product.available_for_sale"
@@ -1160,14 +1623,49 @@
             "body": "product.barcode"
           },
           {
+            "label": "product.brand",
+            "markdownDescription": "Only `brand` of `product`.",
+            "body": "product.brand"
+          },
+          {
+            "label": "product.brand_ref",
+            "markdownDescription": "Only `brand_ref` of `product`.",
+            "body": "product.brand_ref"
+          },
+          {
+            "label": "product.cart_requirements",
+            "markdownDescription": "Only `cart_requirements` of `product`.",
+            "body": "product.cart_requirements"
+          },
+          {
             "label": "product.categories",
             "markdownDescription": "Only `categories` of `product`.",
             "body": "product.categories"
           },
           {
+            "label": "product.collections",
+            "markdownDescription": "Only `collections` of `product`.",
+            "body": "product.collections"
+          },
+          {
+            "label": "product.condition",
+            "markdownDescription": "Only `condition` of `product`.",
+            "body": "product.condition"
+          },
+          {
+            "label": "product.country_of_origin",
+            "markdownDescription": "Only `country_of_origin` of `product`.",
+            "body": "product.country_of_origin"
+          },
+          {
             "label": "product.description",
             "markdownDescription": "Only `description` of `product`.",
             "body": "product.description"
+          },
+          {
+            "label": "product.dimension_unit",
+            "markdownDescription": "Only `dimension_unit` of `product`.",
+            "body": "product.dimension_unit"
           },
           {
             "label": "product.display_variant",
@@ -1185,9 +1683,19 @@
             "body": "product.gift_only"
           },
           {
+            "label": "product.height",
+            "markdownDescription": "Only `height` of `product`.",
+            "body": "product.height"
+          },
+          {
             "label": "product.id",
             "markdownDescription": "Only `id` of `product`.",
             "body": "product.id"
+          },
+          {
+            "label": "product.identifier_status",
+            "markdownDescription": "Only `identifier_status` of `product`.",
+            "body": "product.identifier_status"
           },
           {
             "label": "product.images",
@@ -1205,6 +1713,11 @@
             "body": "product.is_gift_card"
           },
           {
+            "label": "product.length",
+            "markdownDescription": "Only `length` of `product`.",
+            "body": "product.length"
+          },
+          {
             "label": "product.max_order_quantity",
             "markdownDescription": "Only `max_order_quantity` of `product`.",
             "body": "product.max_order_quantity"
@@ -1215,9 +1728,24 @@
             "body": "product.metafields"
           },
           {
+            "label": "product.mpn",
+            "markdownDescription": "Only `mpn` of `product`.",
+            "body": "product.mpn"
+          },
+          {
+            "label": "product.no_manufacturer_identifiers",
+            "markdownDescription": "Only `no_manufacturer_identifiers` of `product`.",
+            "body": "product.no_manufacturer_identifiers"
+          },
+          {
             "label": "product.notify_me_eligible",
             "markdownDescription": "Only `notify_me_eligible` of `product`.",
             "body": "product.notify_me_eligible"
+          },
+          {
+            "label": "product.offers",
+            "markdownDescription": "Only `offers` of `product`.",
+            "body": "product.offers"
           },
           {
             "label": "product.options",
@@ -1228,6 +1756,16 @@
             "label": "product.price",
             "markdownDescription": "Only `price` of `product`.",
             "body": "product.price"
+          },
+          {
+            "label": "product.price_note",
+            "markdownDescription": "Only `price_note` of `product`.",
+            "body": "product.price_note"
+          },
+          {
+            "label": "product.price_notes",
+            "markdownDescription": "Only `price_notes` of `product`.",
+            "body": "product.price_notes"
           },
           {
             "label": "product.price_range",
@@ -1243,6 +1781,11 @@
             "label": "product.purchase_state",
             "markdownDescription": "Only `purchase_state` of `product`.",
             "body": "product.purchase_state"
+          },
+          {
+            "label": "product.quantity_available",
+            "markdownDescription": "Only `quantity_available` of `product`.",
+            "body": "product.quantity_available"
           },
           {
             "label": "product.quantity_max",
@@ -1345,6 +1888,26 @@
             "body": "product.vendor"
           },
           {
+            "label": "product.vendor_ref",
+            "markdownDescription": "Only `vendor_ref` of `product`.",
+            "body": "product.vendor_ref"
+          },
+          {
+            "label": "product.weight",
+            "markdownDescription": "Only `weight` of `product`.",
+            "body": "product.weight"
+          },
+          {
+            "label": "product.weight_unit",
+            "markdownDescription": "Only `weight_unit` of `product`.",
+            "body": "product.weight_unit"
+          },
+          {
+            "label": "product.width",
+            "markdownDescription": "Only `width` of `product`.",
+            "body": "product.width"
+          },
+          {
             "label": "products.items",
             "markdownDescription": "Only `items` of `products`.",
             "body": "products.items"
@@ -1393,21 +1956,6 @@
             "label": "restock_notifications.sms_available",
             "markdownDescription": "Only `sms_available` of `restock_notifications`.",
             "body": "restock_notifications.sms_available"
-          },
-          {
-            "label": "review_notice.code",
-            "markdownDescription": "Only `code` of `review_notice`.",
-            "body": "review_notice.code"
-          },
-          {
-            "label": "review_notice.message",
-            "markdownDescription": "Only `message` of `review_notice`.",
-            "body": "review_notice.message"
-          },
-          {
-            "label": "review_notice.success",
-            "markdownDescription": "Only `success` of `review_notice`.",
-            "body": "review_notice.success"
           },
           {
             "label": "reviews.enabled",
@@ -1505,6 +2053,11 @@
             "body": "routes.root_url"
           },
           {
+            "label": "routes.search_suggest_url",
+            "markdownDescription": "Only `search_suggest_url` of `routes`.",
+            "body": "routes.search_suggest_url"
+          },
+          {
             "label": "routes.search_url",
             "markdownDescription": "Only `search_url` of `routes`.",
             "body": "routes.search_url"
@@ -1540,6 +2093,11 @@
             "body": "search.totals"
           },
           {
+            "label": "shop.checkout_enabled",
+            "markdownDescription": "Only `checkout_enabled` of `shop`.",
+            "body": "shop.checkout_enabled"
+          },
+          {
             "label": "shop.free_shipping",
             "markdownDescription": "Only `free_shipping` of `shop`.",
             "body": "shop.free_shipping"
@@ -1555,9 +2113,44 @@
             "body": "shop.name"
           },
           {
+            "label": "shop.pickup_locations",
+            "markdownDescription": "Only `pickup_locations` of `shop`.",
+            "body": "shop.pickup_locations"
+          },
+          {
             "label": "shop.primary_domain",
             "markdownDescription": "Only `primary_domain` of `shop`.",
             "body": "shop.primary_domain"
+          },
+          {
+            "label": "shopping.catalog_notice",
+            "markdownDescription": "Only `catalog_notice` of `shopping`.",
+            "body": "shopping.catalog_notice"
+          },
+          {
+            "label": "shopping.mode",
+            "markdownDescription": "Only `mode` of `shopping`.",
+            "body": "shopping.mode"
+          },
+          {
+            "label": "shopping.notice",
+            "markdownDescription": "Only `notice` of `shopping`.",
+            "body": "shopping.notice"
+          },
+          {
+            "label": "shopping.pickup_available",
+            "markdownDescription": "Only `pickup_available` of `shopping`.",
+            "body": "shopping.pickup_available"
+          },
+          {
+            "label": "shopping.pickup_location",
+            "markdownDescription": "Only `pickup_location` of `shopping`.",
+            "body": "shopping.pickup_location"
+          },
+          {
+            "label": "still_thinking.items",
+            "markdownDescription": "Only `items` of `still_thinking`.",
+            "body": "still_thinking.items"
           },
           {
             "label": "store_reviews.enabled",
@@ -1677,6 +2270,13 @@
         ]
       }
     },
+    "migrations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/migration"
+      },
+      "markdownDescription": "Operations, in order, that carry merchants' saved settings and blocks across a change to this schema, such as a renamed setting or block type.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema#migrations)"
+    },
     "settings": {
       "type": "array",
       "items": {
@@ -1708,27 +2308,73 @@
         ]
       },
       "then": {
-        "not": {
-          "anyOf": [
-            {
-              "required": [
-                "target"
-              ]
-            },
-            {
-              "required": [
-                "presets"
-              ]
-            }
-          ]
-        },
-        "properties": {
-          "blocks": {
+        "allOf": [
+          {
             "not": {
               "required": [
-                "types"
-              ]
-            }
+                "target"
+              ],
+              "properties": {
+                "target": {
+                  "minLength": 1
+                }
+              }
+            },
+            "errorMessage": "A theme block has no target."
+          },
+          {
+            "not": {
+              "required": [
+                "presets"
+              ],
+              "properties": {
+                "presets": {
+                  "minItems": 1
+                }
+              }
+            },
+            "errorMessage": "A theme block has no presets."
+          },
+          {
+            "not": {
+              "required": [
+                "preview_image"
+              ],
+              "properties": {
+                "preview_image": {
+                  "minLength": 1
+                }
+              }
+            },
+            "errorMessage": "A theme block has no preview_image."
+          }
+        ],
+        "properties": {
+          "blocks": {
+            "required": [
+              "accept_theme_blocks"
+            ],
+            "properties": {
+              "accept_theme_blocks": {
+                "const": true,
+                "errorMessage": "A blocks slot on a theme block needs \"accept_theme_blocks\": true."
+              }
+            },
+            "allOf": [
+              {
+                "not": {
+                  "required": [
+                    "types"
+                  ],
+                  "properties": {
+                    "types": {
+                      "minItems": 1
+                    }
+                  }
+                },
+                "errorMessage": "A theme block's blocks slot takes only theme blocks: no types of its own."
+              }
+            ]
           }
         }
       }
@@ -1737,118 +2383,187 @@
   "definitions": {
     "setting": {
       "type": "object",
-      "required": [
-        "id",
-        "type"
-      ],
       "properties": {
         "id": {
           "type": "string",
           "minLength": 1,
-          "markdownDescription": "Unique in the section. The template reads `settings.<id>`."
+          "markdownDescription": "Unique in the section or block. The template reads `settings.<id>`."
         },
         "type": {
-          "enum": [
-            "blog_category",
-            "blog_post",
-            "brand",
-            "category",
-            "checkbox",
-            "collection",
-            "collection_list",
-            "color",
-            "color_scheme",
-            "image",
-            "menu",
-            "number",
-            "object",
-            "page",
-            "policy",
-            "product",
-            "product_list",
-            "range",
-            "richtext",
-            "select",
-            "text",
-            "textarea",
-            "url",
-            "vascula",
-            "vendor",
-            "video"
-          ],
-          "markdownEnumDescriptions": [
-            "Search and pick one blog category. The template reads the item, or nothing if it was deleted.",
-            "Search and pick one blog post. The template reads the item, or nothing if it was deleted.",
-            "Search and pick one brand. The template reads the item, or nothing if it was deleted.",
-            "Search and pick one category. The template reads the item, or nothing if it was deleted.",
-            "Toggle. The template reads `true` or `false`.",
-            "Search and pick one collection. The template reads the item, or nothing if it was deleted.",
-            "Pick and order several collections, up to `max`. The template reads a list of the picked items.",
-            "Colour picker. The template reads a hex colour.",
-            "One of the theme's colour schemes. The template reads the scheme's id.",
-            "Image from the media library. The template reads an image URL; use `image_url`.",
-            "Menu picker. The template reads the menu from `settings.<id>_resolved`.",
-            "Number input. The template reads a number.",
-            "A group of the declared `fields`. The template reads an object of field values.",
-            "Search and pick one page. The template reads the item, or nothing if it was deleted.",
-            "Search and pick one policy. The template reads the item, or nothing if it was deleted.",
-            "Search and pick one product. The template reads the item, or nothing if it was deleted.",
-            "Pick and order several products, up to `max`. The template reads a list of the picked items.",
-            "Slider. Needs `min` and `max`; `step` and `unit` are optional. The template reads a number.",
-            "Rich text editor. The template reads formatted HTML, cleaned of anything unsafe.",
-            "Drop-down. Needs `options`. The template reads the chosen option's `value`.",
-            "Single-line text. The template reads text.",
-            "Multi-line text. The template reads text.",
-            "Link. The template reads a URL.",
-            "Code editor. The template reads the rendered output of the merchant's Vascula code.",
-            "Search and pick one vendor. The template reads the item, or nothing if it was deleted.",
-            "Video from the media library. The template reads a video URL."
-          ],
-          "markdownDescription": "The setting type, which decides the editor control.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema#setting-types)"
+          "type": "string",
+          "markdownDescription": "The setting type, which decides the editor control.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema#setting-types)",
+          "defaultSnippets": [
+            {
+              "label": "blog_category",
+              "markdownDescription": "Search and pick one blog category. The template reads the item, or nothing if it was deleted.",
+              "body": "blog_category"
+            },
+            {
+              "label": "blog_post",
+              "markdownDescription": "Search and pick one blog post. The template reads the item, or nothing if it was deleted.",
+              "body": "blog_post"
+            },
+            {
+              "label": "brand",
+              "markdownDescription": "Search and pick one brand. The template reads the item, or nothing if it was deleted.",
+              "body": "brand"
+            },
+            {
+              "label": "category",
+              "markdownDescription": "Search and pick one category. The template reads the item, or nothing if it was deleted.",
+              "body": "category"
+            },
+            {
+              "label": "checkbox",
+              "markdownDescription": "Toggle. The template reads `true` or `false`.",
+              "body": "checkbox"
+            },
+            {
+              "label": "collection",
+              "markdownDescription": "Search and pick one collection. The template reads the item, or nothing if it was deleted.",
+              "body": "collection"
+            },
+            {
+              "label": "collection_list",
+              "markdownDescription": "Pick and order several collections, up to `max`. The template reads a list of the picked items.",
+              "body": "collection_list"
+            },
+            {
+              "label": "color",
+              "markdownDescription": "Colour picker. The template reads a hex colour.",
+              "body": "color"
+            },
+            {
+              "label": "color_scheme",
+              "markdownDescription": "One of the theme's colour schemes. The template reads the scheme's id.",
+              "body": "color_scheme"
+            },
+            {
+              "label": "datetime",
+              "markdownDescription": "Date and time in the store's time zone. Stored as wall time without an offset, such as `2026-12-01T09:00`.",
+              "body": "datetime"
+            },
+            {
+              "label": "image",
+              "markdownDescription": "Image from the media library. The template reads an image URL; use `image_url`.",
+              "body": "image"
+            },
+            {
+              "label": "menu",
+              "markdownDescription": "Menu picker. The template reads the menu from `settings.<id>_resolved`.",
+              "body": "menu"
+            },
+            {
+              "label": "metafield",
+              "markdownDescription": "Pick one of the store's metafield definitions for the resource named by `owner` (required). The template reads `{namespace, key, handle}`.",
+              "body": "metafield"
+            },
+            {
+              "label": "number",
+              "markdownDescription": "Number input. The template reads a number.",
+              "body": "number"
+            },
+            {
+              "label": "object",
+              "markdownDescription": "A group of the declared `fields`. The template reads an object of field values.",
+              "body": "object"
+            },
+            {
+              "label": "page",
+              "markdownDescription": "Search and pick one page. The template reads the item, or nothing if it was deleted.",
+              "body": "page"
+            },
+            {
+              "label": "point",
+              "markdownDescription": "A spot on the image setting named by `image` (required), placed by clicking or dragging. The template reads `x` and `y`, percentages (0–100) of the image's width and height.",
+              "body": "point"
+            },
+            {
+              "label": "policy",
+              "markdownDescription": "Search and pick one policy. The template reads the item, or nothing if it was deleted.",
+              "body": "policy"
+            },
+            {
+              "label": "product",
+              "markdownDescription": "Search and pick one product. The template reads the item, or nothing if it was deleted.",
+              "body": "product"
+            },
+            {
+              "label": "product_list",
+              "markdownDescription": "Pick and order several products, up to `max`. The template reads a list of the picked items.",
+              "body": "product_list"
+            },
+            {
+              "label": "product_source",
+              "markdownDescription": "A live product feed: a category or collection, optionally narrowed to one tag, with an order and a count up to `max`. The template reads `entity`, `url` and `products`.",
+              "body": "product_source"
+            },
+            {
+              "label": "range",
+              "markdownDescription": "Slider. Needs `min` and `max`; `step` and `unit` are optional. The template reads a number.",
+              "body": "range"
+            },
+            {
+              "label": "richtext",
+              "markdownDescription": "Rich text editor. The template reads formatted HTML, cleaned of anything unsafe.",
+              "body": "richtext"
+            },
+            {
+              "label": "select",
+              "markdownDescription": "Drop-down. Needs `options`. The template reads the chosen option's `value`.",
+              "body": "select"
+            },
+            {
+              "label": "text",
+              "markdownDescription": "Single-line text. The template reads text.",
+              "body": "text"
+            },
+            {
+              "label": "textarea",
+              "markdownDescription": "Multi-line text. The template reads text.",
+              "body": "textarea"
+            },
+            {
+              "label": "url",
+              "markdownDescription": "Link. The template reads a URL.",
+              "body": "url"
+            },
+            {
+              "label": "vascula",
+              "markdownDescription": "Code editor. The template reads the rendered output of the merchant's Vascula code.",
+              "body": "vascula"
+            },
+            {
+              "label": "vendor",
+              "markdownDescription": "Search and pick one vendor. The template reads the item, or nothing if it was deleted.",
+              "body": "vendor"
+            },
+            {
+              "label": "video",
+              "markdownDescription": "Video from the media library. The template reads a video URL.",
+              "body": "video"
+            }
+          ]
         },
         "default": {
           "description": "The value a new section starts with."
         },
         "editor": {
-          "type": "object",
-          "markdownDescription": "`label` and optional `group`. A setting without `editor` is not shown to merchants. Both can be literal text or keys from `locales/<locale>.schema.json` (`fieldLabel.<label>`, `fieldGroup.<group>`).",
-          "properties": {
-            "label": {
-              "type": "string",
-              "description": "The setting's label in the theme editor."
-            },
-            "group": {
-              "type": "string",
-              "description": "The editor group the setting appears in."
-            }
-          }
+          "$ref": "#/definitions/editor"
         },
         "options": {
           "type": "array",
-          "markdownDescription": "For `select`: the choices.",
           "items": {
-            "type": "object",
-            "required": [
-              "value",
-              "label"
-            ],
-            "properties": {
-              "value": {
-                "description": "The value the template reads."
-              },
-              "label": {
-                "type": "string",
-                "description": "The label merchants see."
-              }
-            }
-          }
+            "$ref": "#/definitions/option"
+          },
+          "markdownDescription": "For `select`: the choices."
         },
         "fields": {
           "type": "array",
-          "markdownDescription": "For `object`: the fields of the value, each with a unique `key`.",
           "items": {
             "$ref": "#/definitions/objectField"
-          }
+          },
+          "markdownDescription": "For `object`: the fields of the value, each with a unique `key`."
         },
         "min": {
           "type": "number",
@@ -1856,7 +2571,7 @@
         },
         "max": {
           "type": "number",
-          "markdownDescription": "For `range` (required) and `number`: the highest value. For `product_list` and `collection_list`: the most items (12 if not set)."
+          "markdownDescription": "For `range` (required) and `number`: the highest value. For `product_list`, `collection_list` and `product_source`: the most items (12 if not set)."
         },
         "step": {
           "type": "number",
@@ -1867,52 +2582,266 @@
           "markdownDescription": "For `range`: the unit shown after the value, such as `px`."
         },
         "visible_if": {
-          "type": "object",
-          "markdownDescription": "Show the setting only when another setting has one of the given values.",
-          "required": [
-            "setting",
-            "values"
+          "$ref": "#/definitions/visibleIf"
+        },
+        "owner": {
+          "type": "string",
+          "enum": [
+            "blog_category",
+            "blog_post",
+            "brand",
+            "category",
+            "collection",
+            "customer",
+            "page",
+            "product",
+            "store",
+            "variant",
+            "vendor"
           ],
-          "properties": {
-            "setting": {
-              "type": "string",
-              "minLength": 1,
-              "description": "The id of the other setting."
-            },
-            "values": {
-              "type": "array",
-              "minItems": 1,
-              "description": "The values that show this setting."
-            }
-          },
-          "defaultSnippets": [
-            {
-              "body": {
-                "setting": "$1",
-                "values": [
-                  "$2"
-                ]
-              }
-            }
-          ]
+          "markdownEnumDescriptions": [
+            "Metafield definitions of a blog category.",
+            "Metafield definitions of a blog post.",
+            "Metafield definitions of a brand.",
+            "Metafield definitions of a category.",
+            "Metafield definitions of a collection.",
+            "Metafield definitions of a customer.",
+            "Metafield definitions of a page.",
+            "Metafield definitions of a product.",
+            "Metafield definitions of the store.",
+            "Metafield definitions of a variant.",
+            "Metafield definitions of a vendor."
+          ],
+          "markdownDescription": "For `metafield` (required): the resource whose metafield definitions the merchant picks from. Only `metafield` settings take `owner`."
+        },
+        "image": {
+          "type": "string",
+          "markdownDescription": "For `point` (required): the id of the `image` setting the point sits on, in the same block or its section. Only `point` settings take `image`."
         }
       },
       "allOf": [
         {
           "if": {
-            "properties": {
-              "type": {
-                "const": "range"
-              }
-            },
             "required": [
-              "type"
+              "editor"
             ]
           },
           "then": {
-            "required": [
-              "min",
-              "max"
+            "allOf": [
+              {
+                "required": [
+                  "id",
+                  "type"
+                ],
+                "properties": {
+                  "id": {
+                    "pattern": "\\S"
+                  },
+                  "type": {
+                    "enum": [
+                      "blog_category",
+                      "blog_post",
+                      "brand",
+                      "category",
+                      "checkbox",
+                      "collection",
+                      "collection_list",
+                      "color",
+                      "color_scheme",
+                      "datetime",
+                      "image",
+                      "menu",
+                      "metafield",
+                      "number",
+                      "object",
+                      "page",
+                      "point",
+                      "policy",
+                      "product",
+                      "product_list",
+                      "product_source",
+                      "range",
+                      "richtext",
+                      "select",
+                      "text",
+                      "textarea",
+                      "url",
+                      "vascula",
+                      "vendor",
+                      "video"
+                    ],
+                    "markdownEnumDescriptions": [
+                      "Search and pick one blog category. The template reads the item, or nothing if it was deleted.",
+                      "Search and pick one blog post. The template reads the item, or nothing if it was deleted.",
+                      "Search and pick one brand. The template reads the item, or nothing if it was deleted.",
+                      "Search and pick one category. The template reads the item, or nothing if it was deleted.",
+                      "Toggle. The template reads `true` or `false`.",
+                      "Search and pick one collection. The template reads the item, or nothing if it was deleted.",
+                      "Pick and order several collections, up to `max`. The template reads a list of the picked items.",
+                      "Colour picker. The template reads a hex colour.",
+                      "One of the theme's colour schemes. The template reads the scheme's id.",
+                      "Date and time in the store's time zone. Stored as wall time without an offset, such as `2026-12-01T09:00`.",
+                      "Image from the media library. The template reads an image URL; use `image_url`.",
+                      "Menu picker. The template reads the menu from `settings.<id>_resolved`.",
+                      "Pick one of the store's metafield definitions for the resource named by `owner` (required). The template reads `{namespace, key, handle}`.",
+                      "Number input. The template reads a number.",
+                      "A group of the declared `fields`. The template reads an object of field values.",
+                      "Search and pick one page. The template reads the item, or nothing if it was deleted.",
+                      "A spot on the image setting named by `image` (required), placed by clicking or dragging. The template reads `x` and `y`, percentages (0–100) of the image's width and height.",
+                      "Search and pick one policy. The template reads the item, or nothing if it was deleted.",
+                      "Search and pick one product. The template reads the item, or nothing if it was deleted.",
+                      "Pick and order several products, up to `max`. The template reads a list of the picked items.",
+                      "A live product feed: a category or collection, optionally narrowed to one tag, with an order and a count up to `max`. The template reads `entity`, `url` and `products`.",
+                      "Slider. Needs `min` and `max`; `step` and `unit` are optional. The template reads a number.",
+                      "Rich text editor. The template reads formatted HTML, cleaned of anything unsafe.",
+                      "Drop-down. Needs `options`. The template reads the chosen option's `value`.",
+                      "Single-line text. The template reads text.",
+                      "Multi-line text. The template reads text.",
+                      "Link. The template reads a URL.",
+                      "Code editor. The template reads the rendered output of the merchant's Vascula code.",
+                      "Search and pick one vendor. The template reads the item, or nothing if it was deleted.",
+                      "Video from the media library. The template reads a video URL."
+                    ]
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "range"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "min",
+                    "max"
+                  ],
+                  "properties": {
+                    "step": {
+                      "exclusiveMinimum": 0,
+                      "description": "Must be greater than 0."
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "metafield"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "owner"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "not": {
+                    "properties": {
+                      "type": {
+                        "const": "metafield"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  }
+                },
+                "then": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "owner"
+                        ]
+                      }
+                    ]
+                  },
+                  "errorMessage": "Only metafield settings take owner."
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "point"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "image"
+                  ],
+                  "properties": {
+                    "image": {
+                      "pattern": "\\S"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "not": {
+                    "properties": {
+                      "type": {
+                        "const": "point"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  }
+                },
+                "then": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "image"
+                        ]
+                      }
+                    ]
+                  },
+                  "errorMessage": "Only point settings take image."
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "object"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "fields"
+                  ],
+                  "properties": {
+                    "fields": {
+                      "minItems": 1
+                    }
+                  }
+                }
+              }
             ]
           }
         }
@@ -1935,20 +2864,17 @@
     "objectField": {
       "type": "object",
       "required": [
-        "key",
-        "type"
+        "key"
       ],
       "properties": {
         "key": {
           "type": "string",
           "minLength": 1,
-          "description": "The field's key in the object value."
-        },
-        "label": {
-          "type": "string",
-          "description": "The field's editor label."
+          "pattern": "\\S",
+          "description": "The field's key in the object value. Unique in the setting."
         },
         "type": {
+          "type": "string",
           "enum": [
             "blog_category",
             "blog_post",
@@ -1959,6 +2885,7 @@
             "collection_list",
             "color",
             "color_scheme",
+            "datetime",
             "image",
             "menu",
             "number",
@@ -1967,6 +2894,7 @@
             "policy",
             "product",
             "product_list",
+            "product_source",
             "range",
             "richtext",
             "select",
@@ -1987,6 +2915,7 @@
             "Pick and order several collections, up to `max`. The template reads a list of the picked items.",
             "Colour picker. The template reads a hex colour.",
             "One of the theme's colour schemes. The template reads the scheme's id.",
+            "Date and time in the store's time zone. Stored as wall time without an offset, such as `2026-12-01T09:00`.",
             "Image from the media library. The template reads an image URL; use `image_url`.",
             "Menu picker. The template reads the menu from `settings.<id>_resolved`.",
             "Number input. The template reads a number.",
@@ -1995,6 +2924,7 @@
             "Search and pick one policy. The template reads the item, or nothing if it was deleted.",
             "Search and pick one product. The template reads the item, or nothing if it was deleted.",
             "Pick and order several products, up to `max`. The template reads a list of the picked items.",
+            "A live product feed: a category or collection, optionally narrowed to one tag, with an order and a count up to `max`. The template reads `entity`, `url` and `products`.",
             "Slider. Needs `min` and `max`; `step` and `unit` are optional. The template reads a number.",
             "Rich text editor. The template reads formatted HTML, cleaned of anything unsafe.",
             "Drop-down. Needs `options`. The template reads the chosen option's `value`.",
@@ -2005,119 +2935,28 @@
             "Search and pick one vendor. The template reads the item, or nothing if it was deleted.",
             "Video from the media library. The template reads a video URL."
           ],
-          "markdownDescription": "The setting type, which decides the editor control.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema#setting-types)"
+          "markdownDescription": "The field's control. Any setting type except `metafield` and `point`."
         },
-        "default": {
-          "description": "The value a new section starts with."
+        "label": {
+          "type": "string",
+          "description": "The field's editor label."
         },
-        "editor": {
-          "type": "object",
-          "markdownDescription": "`label` and optional `group`. A setting without `editor` is not shown to merchants. Both can be literal text or keys from `locales/<locale>.schema.json` (`fieldLabel.<label>`, `fieldGroup.<group>`).",
-          "properties": {
-            "label": {
-              "type": "string",
-              "description": "The setting's label in the theme editor."
-            },
-            "group": {
-              "type": "string",
-              "description": "The editor group the setting appears in."
-            }
-          }
+        "required": {
+          "type": "boolean",
+          "description": "The merchant must fill the field."
+        },
+        "max": {
+          "type": "integer",
+          "description": "The field's maximum, such as the most characters."
         },
         "options": {
           "type": "array",
-          "markdownDescription": "For `select`: the choices.",
           "items": {
-            "type": "object",
-            "required": [
-              "value",
-              "label"
-            ],
-            "properties": {
-              "value": {
-                "description": "The value the template reads."
-              },
-              "label": {
-                "type": "string",
-                "description": "The label merchants see."
-              }
-            }
-          }
-        },
-        "fields": {
-          "type": "array",
-          "markdownDescription": "For `object`: the fields of the value, each with a unique `key`.",
-          "items": {
-            "$ref": "#/definitions/objectField"
-          }
-        },
-        "min": {
-          "type": "number",
-          "markdownDescription": "For `range` (required) and `number`: the lowest value."
-        },
-        "max": {
-          "type": "number",
-          "markdownDescription": "For `range` (required) and `number`: the highest value. For `product_list` and `collection_list`: the most items (12 if not set)."
-        },
-        "step": {
-          "type": "number",
-          "markdownDescription": "For `range`: the step between values."
-        },
-        "unit": {
-          "type": "string",
-          "markdownDescription": "For `range`: the unit shown after the value, such as `px`."
-        },
-        "visible_if": {
-          "type": "object",
-          "markdownDescription": "Show the setting only when another setting has one of the given values.",
-          "required": [
-            "setting",
-            "values"
-          ],
-          "properties": {
-            "setting": {
-              "type": "string",
-              "minLength": 1,
-              "description": "The id of the other setting."
-            },
-            "values": {
-              "type": "array",
-              "minItems": 1,
-              "description": "The values that show this setting."
-            }
+            "$ref": "#/definitions/option"
           },
-          "defaultSnippets": [
-            {
-              "body": {
-                "setting": "$1",
-                "values": [
-                  "$2"
-                ]
-              }
-            }
-          ]
+          "markdownDescription": "For a `select` field: the choices."
         }
       },
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "range"
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          "then": {
-            "required": [
-              "min",
-              "max"
-            ]
-          }
-        }
-      ],
       "defaultSnippets": [
         {
           "label": "field",
@@ -2125,6 +2964,122 @@
             "key": "$1",
             "type": "${2:text}",
             "label": "$3"
+          }
+        }
+      ]
+    },
+    "option": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The value the template reads."
+        },
+        "label": {
+          "type": "string",
+          "description": "The label merchants see."
+        },
+        "group": {
+          "type": "string",
+          "description": "Set by the platform on font_picker options. Themes do not write it."
+        }
+      }
+    },
+    "editor": {
+      "type": "object",
+      "markdownDescription": "Present on every setting merchants edit. A setting without `editor` is runtime data the host fills, and is not shown to merchants. `label` and `group` can be literal text or keys from `locales/<locale>.schema.json` (`fieldLabel.<label>`, `fieldGroup.<group>`).",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "The setting's or block's label in the theme editor."
+        },
+        "group": {
+          "type": "string",
+          "description": "The editor group the setting appears in, such as content or settings."
+        },
+        "icon": {
+          "type": "string",
+          "description": "For block types: the block's icon in the theme editor."
+        }
+      }
+    },
+    "visibleIf": {
+      "type": "object",
+      "markdownDescription": "Show the setting in the editor only while another setting of the same section or block has one of `values`, or, with `set`, while it has a value (`true`) or is empty (`false`). Give exactly one of `values` and `set`.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema#settings)",
+      "required": [
+        "setting"
+      ],
+      "properties": {
+        "setting": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "The id of the other setting."
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "The values that show this setting."
+        },
+        "set": {
+          "type": "boolean",
+          "description": "true: show this setting while the other one has a value (an image picked, text entered). false: while it is empty."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "values",
+              "set"
+            ]
+          },
+          "then": {
+            "not": {},
+            "errorMessage": "visible_if takes exactly one of values and set."
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "values"
+                  ]
+                },
+                {
+                  "required": [
+                    "set"
+                  ]
+                }
+              ]
+            }
+          },
+          "then": {
+            "not": {},
+            "errorMessage": "visible_if needs values or set."
+          }
+        }
+      ],
+      "defaultSnippets": [
+        {
+          "label": "values",
+          "body": {
+            "setting": "$1",
+            "values": [
+              "$2"
+            ]
+          }
+        },
+        {
+          "label": "set",
+          "body": {
+            "setting": "$1",
+            "set": true
           }
         }
       ]
@@ -2156,38 +3111,80 @@
           "type": "boolean",
           "markdownDescription": "Accept the theme's shared theme blocks (`blocks/<name>.vasc`), stored as `theme:<name>`. Place `{% blocks %}` where they render. Blocks nest up to 4 levels.\n\n[Documentation](https://dev-docs.tringify.com/themes/theme-blocks)"
         },
+        "theme_blocks": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$",
+            "errorMessage": "A theme block name, as in blocks/<name>.vasc, without theme:."
+          },
+          "markdownDescription": "Accept only these theme blocks (names of `blocks/<name>.vasc`, without `theme:`), such as only slides in a slideshow. Needs `accept_theme_blocks`. Omit to accept every theme block."
+        },
         "accept_app_blocks": {
           "type": "boolean",
           "description": "Accept blocks from the merchant's installed apps."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "theme_blocks"
+            ],
+            "properties": {
+              "theme_blocks": {
+                "minItems": 1
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "accept_theme_blocks"
+            ],
+            "properties": {
+              "accept_theme_blocks": {
+                "const": true,
+                "errorMessage": "theme_blocks needs \"accept_theme_blocks\": true."
+              }
+            }
+          }
+        }
+      ]
     },
     "blockType": {
       "type": "object",
       "required": [
-        "type"
+        "type",
+        "settings"
       ],
       "properties": {
         "type": {
           "type": "string",
           "minLength": 1,
+          "pattern": "\\S",
           "description": "The block type. Unique in the section."
         },
         "editor": {
-          "type": "object",
-          "properties": {
-            "label": {
-              "type": "string",
-              "description": "The block's name in the theme editor."
-            }
-          }
+          "$ref": "#/definitions/editor"
         },
         "settings": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/setting"
           },
-          "description": "The block's settings."
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "required": [
+                  "editor"
+                ]
+              },
+              "errorMessage": "A block type needs at least one setting with an editor block."
+            }
+          ],
+          "markdownDescription": "The block's settings. At least one has an `editor` block."
         }
       },
       "defaultSnippets": [
@@ -2222,7 +3219,8 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "description": "The preset's name in the editor's \"Add section\" list."
+          "pattern": "\\S",
+          "description": "The preset's name in the editor's \"Add section\" list. Unique in the section."
         },
         "category": {
           "type": "string",
@@ -2234,23 +3232,580 @@
         },
         "blocks": {
           "type": "array",
-          "description": "Starting blocks: declared block types, or theme:<name> when the section accepts theme blocks.",
           "items": {
-            "type": "object",
+            "$ref": "#/definitions/presetBlock"
+          },
+          "description": "Starting blocks."
+        }
+      }
+    },
+    "presetBlock": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "A declared block type, or theme:<name> for a theme block the section accepts."
+        },
+        "settings": {
+          "type": "object",
+          "description": "Values for the block's settings."
+        }
+      }
+    },
+    "migration": {
+      "type": "object",
+      "required": [
+        "id",
+        "op"
+      ],
+      "markdownDescription": "An operation that carries merchants' saved settings across a schema change.\n\n[Documentation](https://dev-docs.tringify.com/themes/section-schema#migrations)",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Unique among the migrations. Never reuse one."
+        },
+        "op": {
+          "type": "string",
+          "enum": [
+            "rename_block",
+            "rename_setting",
+            "move_setting",
+            "remove_setting",
+            "set_default",
+            "combine_point",
+            "settings_to_blocks"
+          ],
+          "markdownEnumDescriptions": [
+            "A local block type was renamed: `from_type` to `to_type` (a declared type, or `theme:<name>` the section accepts).",
+            "A setting was renamed in the same scope: `from` to `to`.",
+            "A setting moved to another scope (section ↔ local block type): `from` to `to`.",
+            "A setting was dropped on purpose: `from` only.",
+            "Fill a value for a new setting `to` in saved sections that lack it: `default`.",
+            "Two retired number settings (`from` horizontal, `from_y` vertical) become the point setting `to`.",
+            "Retired settings become theme blocks in `settings.blocks`: `blocks`."
+          ]
+        },
+        "from_type": {
+          "type": "string",
+          "pattern": "^[^:]+$",
+          "patternErrorMessage": "The retired local block type, without theme: or app:.",
+          "description": "rename_block: the retired local block type."
+        },
+        "to_type": {
+          "type": "string",
+          "description": "rename_block: a declared block type, or theme:<name>."
+        },
+        "from": {
+          "$ref": "#/definitions/settingLocation"
+        },
+        "to": {
+          "$ref": "#/definitions/settingLocation"
+        },
+        "from_y": {
+          "$ref": "#/definitions/settingLocation"
+        },
+        "default": {
+          "not": {
+            "type": "null"
+          },
+          "description": "set_default: the value."
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/migrationBlock"
+          },
+          "description": "settings_to_blocks: the theme blocks to create."
+        },
+        "source_defaults": {
+          "type": "object",
+          "additionalProperties": {
+            "not": {
+              "type": "null"
+            }
+          },
+          "description": "settings_to_blocks, or rename_block to a theme block: the retired settings' old defaults."
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "properties": {
+                "op": {
+                  "const": "rename_block"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            }
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "from_type"
+                  ]
+                },
+                {
+                  "required": [
+                    "to_type"
+                  ]
+                }
+              ]
+            },
+            "errorMessage": "from_type and to_type are only for rename_block."
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "properties": {
+                "op": {
+                  "const": "settings_to_blocks"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            }
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "blocks"
+                  ]
+                }
+              ]
+            },
+            "errorMessage": "blocks is only for settings_to_blocks."
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "properties": {
+                "op": {
+                  "enum": [
+                    "settings_to_blocks",
+                    "rename_block"
+                  ]
+                }
+              },
+              "required": [
+                "op"
+              ]
+            }
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "source_defaults"
+                  ]
+                }
+              ]
+            },
+            "errorMessage": "source_defaults is only for settings_to_blocks and rename_block."
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "properties": {
+                "op": {
+                  "const": "combine_point"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            }
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "from_y"
+                  ]
+                }
+              ]
+            },
+            "errorMessage": "from_y is only for combine_point."
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "rename_block"
+              }
+            },
             "required": [
-              "type"
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "from_type",
+              "to_type"
+            ],
+            "allOf": [
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "default"
+                      ]
+                    }
+                  ]
+                },
+                "errorMessage": "rename_block does not take from, to or default."
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "settings_to_blocks"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "blocks"
             ],
             "properties": {
-              "type": {
-                "type": "string"
-              },
-              "settings": {
-                "type": "object"
+              "blocks": {
+                "minItems": 1
               }
+            },
+            "allOf": [
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "default"
+                      ]
+                    }
+                  ]
+                },
+                "errorMessage": "settings_to_blocks does not take from, to or default."
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "remove_setting"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "from"
+            ],
+            "allOf": [
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "to"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "default"
+                      ]
+                    }
+                  ]
+                },
+                "errorMessage": "remove_setting does not take to or default."
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "rename_setting"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "from",
+              "to"
+            ],
+            "allOf": [
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "default"
+                      ]
+                    }
+                  ]
+                },
+                "errorMessage": "rename_setting does not take default."
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "move_setting"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "from",
+              "to"
+            ],
+            "allOf": [
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "default"
+                      ]
+                    }
+                  ]
+                },
+                "errorMessage": "move_setting does not take default."
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_default"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "to",
+              "default"
+            ],
+            "allOf": [
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "from"
+                      ]
+                    }
+                  ]
+                },
+                "errorMessage": "set_default does not take from."
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "combine_point"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "from",
+              "from_y",
+              "to"
+            ],
+            "allOf": [
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "default"
+                      ]
+                    }
+                  ]
+                },
+                "errorMessage": "combine_point does not take default."
+              }
+            ]
+          }
+        }
+      ],
+      "defaultSnippets": [
+        {
+          "label": "rename_setting",
+          "body": {
+            "id": "$1",
+            "op": "rename_setting",
+            "from": {
+              "setting": "$2"
+            },
+            "to": {
+              "setting": "$3"
+            }
+          }
+        },
+        {
+          "label": "remove_setting",
+          "body": {
+            "id": "$1",
+            "op": "remove_setting",
+            "from": {
+              "setting": "$2"
             }
           }
         }
-      }
+      ]
+    },
+    "settingLocation": {
+      "type": "object",
+      "required": [
+        "setting"
+      ],
+      "properties": {
+        "block_type": {
+          "type": "string",
+          "pattern": "^[^:]*$",
+          "patternErrorMessage": "A local block type the section declares, without theme: or app:.",
+          "description": "A local block type. Omit for a section setting."
+        },
+        "setting": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!blocks$)[^.\\[\\]]+$",
+          "patternErrorMessage": "A setting id: not blocks, and without dots or brackets.",
+          "description": "The setting id."
+        }
+      },
+      "additionalProperties": false
+    },
+    "migrationBlock": {
+      "type": "object",
+      "required": [
+        "type",
+        "settings"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "pattern": "^theme:[A-Za-z0-9_-]{1,100}$",
+          "patternErrorMessage": "theme:<name>, a theme block the owner accepts.",
+          "description": "theme:<name>, a theme block the owner accepts."
+        },
+        "settings": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(?!blocks$)[^.\\[\\]]+$",
+            "patternErrorMessage": "A setting id: not blocks, and without dots or brackets."
+          },
+          "additionalProperties": {
+            "type": "string"
+          },
+          "minProperties": 1,
+          "description": "The new block's setting ids, mapped to the owner's retired setting ids."
+        },
+        "copy": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(?!blocks$)[^.\\[\\]]+$",
+            "patternErrorMessage": "A setting id: not blocks, and without dots or brackets."
+          },
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "More of the new block's setting ids, mapped to settings the owner keeps."
+        },
+        "values": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(?!blocks$)[^.\\[\\]]+$",
+            "patternErrorMessage": "A setting id: not blocks, and without dots or brackets."
+          },
+          "additionalProperties": {
+            "not": {
+              "type": "null"
+            }
+          },
+          "description": "Fixed settings of the new block."
+        },
+        "when": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Settings that must all have a value for the block to be created."
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

@@ -80,7 +80,8 @@
       },
       {
         "fileMatch": [
-          "templates/*.json"
+          "templates/*.json",
+          "templates/styles/*/*.json"
         ],
         "url": "./schemas/template.schema.json"
       },
@@ -138,7 +139,7 @@
     "build": "esbuild src/extension.ts --bundle --platform=node --main-fields=module,main --format=cjs --target=node18 --external:vscode --outfile=dist/extension.js --minify --sourcemap=external",
     "build:core": "esbuild src/core.ts --bundle --platform=node --main-fields=module,main --format=cjs --target=node18 --outfile=out/core.js",
     "typecheck": "tsc --noEmit",
-    "fetch-starter": "node test/fetch-starter.mjs",
+    "fetch-canvas": "node test/fetch-canvas.mjs",
     "test:grammar": "vscode-tmgrammar-test -g test/fixtures/grammars/json.tmLanguage.json -g test/fixtures/grammars/css.tmLanguage.json -g test/fixtures/grammars/javascript.tmLanguage.json -g test/fixtures/grammars/html.tmLanguage.json -g test/fixtures/grammars/html-derivative.tmLanguage.json -g syntaxes/vascula.tmLanguage.json \"test/grammar/*.vasc\"",
     "test:unit": "npm run build:core && node --test test/unit/*.test.mjs",
     "test:e2e": "node test/e2e/run.mjs",

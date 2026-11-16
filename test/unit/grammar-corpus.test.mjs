@@ -1,4 +1,4 @@
-// Tokenizes every .vasc file of the theme starter with the extension's grammar and
+// Tokenizes every .vasc file of Canvas, the default theme, with the extension's grammar and
 // VS Code's HTML, CSS, JavaScript and JSON grammars, and checks that no Vascula
 // markup is left untokenized and nothing is marked invalid.
 import { test } from "node:test";
@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { join, relative } from "node:path";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
-import { core, starterDir, files, read, root } from "./helpers.mjs";
+import { core, canvasDir, files, read, root } from "./helpers.mjs";
 
 const require = createRequire(import.meta.url);
 const vsctm = require("vscode-textmate");
@@ -55,17 +55,17 @@ function tokenize(grammar, text) {
 
 const OPENERS = /\{\{|\{%|\{#/g;
 
-test("every starter .vasc file tokenizes fully", async () => {
+test("every Canvas .vasc file tokenizes fully", async () => {
   const grammar = await loadGrammar();
-  const vasc = [...files(join(starterDir, "sections"), ".vasc"), ...files(join(starterDir, "blocks"), ".vasc")];
+  const vasc = [...files(join(canvasDir, "sections"), ".vasc"), ...files(join(canvasDir, "blocks"), ".vasc")];
   assert.ok(vasc.length >= 40);
   // Section sources edited before `tringify-theme build`: markup only, no schema block.
-  const bodies = files(join(starterDir, "src/sections"), "body.html");
+  const bodies = files(join(canvasDir, "src/sections"), "body.html");
   assert.ok(bodies.length >= 30);
   vasc.push(...bodies);
   let markupCount = 0;
   for (const f of vasc) {
-    const name = relative(starterDir, f);
+    const name = relative(canvasDir, f);
     const text = read(f);
     const { tokens } = tokenize(grammar, text);
     const at = (offset) => tokens.find((t) => offset >= t.start && offset < t.end);

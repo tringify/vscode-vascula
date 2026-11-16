@@ -35,17 +35,20 @@ const hoverText = (hovers) =>
 const tests = [];
 const test = (name, fn) => tests.push({ name, fn });
 
-test("a starter section opens as Vascula and is highlighted by the extension's grammar", async () => {
-  const { doc } = await open("sections/starter-product.vasc");
+test("a Canvas section opens as Vascula and is highlighted by the extension's grammar", async () => {
+  const { doc } = await open("sections/main-product.vasc");
   assert.equal(doc.languageId, "vascula");
   const tokens = await until("syntax tokens", async () => {
     const t = await vscode.commands.executeCommand("_workbench.captureSyntaxTokens", doc.uri);
     return t && t.length ? t : undefined;
   });
   const scoped = (pred) => tokens.filter((t) => pred(t.t));
-  const openers = tokens.filter((t) => t.c.startsWith("{{") || t.c.startsWith("{%"));
-  assert.ok(openers.length > 50, `found ${openers.length} markup openers`);
-  for (const t of openers) assert.match(t.t, /punctuation\.section\.embedded\.begin\.vascula/, `${t.c} → ${t.t}`);
+  // {% comment %} blocks are comments: their opener and everything up to endcomment.
+  const markup = tokens.filter((t) => (t.c.startsWith("{{") || t.c.startsWith("{%")) && !t.t.includes("comment.block.vascula"));
+  assert.ok(markup.length > 50, `found ${markup.length} markup openers`);
+  for (const t of markup) assert.match(t.t, /punctuation\.section\.embedded\.begin\.vascula/, `${t.c} → ${t.t}`);
+  const comments = tokens.filter((t) => t.t.includes("punctuation.definition.comment.begin.vascula"));
+  assert.ok(comments.length > 0, "comment tags");
   assert.ok(scoped((s) => s.includes("support.function.filter.vascula")).some((t) => t.c === "money"), "money is a filter");
   assert.ok(scoped((s) => s.includes("keyword.control.vascula")).length > 10, "control keywords");
   assert.ok(scoped((s) => s.includes("meta.embedded.block.schema.vascula") && s.includes("support.type.property-name.json")).length > 10, "schema JSON");
@@ -53,7 +56,7 @@ test("a starter section opens as Vascula and is highlighted by the extension's g
   assert.equal(scoped((s) => /\binvalid\./.test(s)).length, 0, "nothing is invalid");
 });
 
-test("every starter section and block has no diagnostics", async () => {
+test("every Canvas section and block has no diagnostics", async () => {
   const files = await vscode.workspace.findFiles("{sections,blocks}/*.vasc");
   assert.ok(files.length >= 40);
   for (const uri of files) {
@@ -69,7 +72,7 @@ test("every starter section and block has no diagnostics", async () => {
 test("schema mistakes are reported as you type", async () => {
   write(
     "sections/zz-broken.vasc",
-    '<p>{{ settings.heading }}</p>\n{% schema %}\n{ "name": "zz-broken", "ctx_needs": ["bogus"], "bogus": 1,\n  "settings": [ { "id": "heading", "type": "font_picker" } ] }\n{% endschema %}\n',
+    '<p>{{ settings.heading }}</p>\n{% schema %}\n{ "name": "zz-broken", "ctx_needs": ["bogus"], "bogus": 1,\n  "settings": [ { "id": "heading", "type": "font_picker", "editor": { "label": "Heading" } } ] }\n{% endschema %}\n',
   );
   const { doc } = await open("sections/zz-broken.vasc");
   const ds = await until("diagnostics", async () => {
@@ -127,7 +130,7 @@ test("section sources (src/sections/<name>/body.html) are Vascula and read their
   const list = await vscode.commands.executeCommand("vscode.executeCompletionItemProvider", doc.uri, new vscode.Position(0, 15), ".");
   assert.ok(labels(list).includes("tagline"), labels(list).join());
   const { doc: schema } = await open("src/sections/zz-src/schema.json");
-  write("src/sections/zz-src/schema.json", '{ "name": "zz-src", "settings": [ { "id": "tagline", "type": "headline" } ] }\n');
+  write("src/sections/zz-src/schema.json", '{ "name": "zz-src", "settings": [ { "id": "tagline", "type": "headline", "editor": { "label": "Tagline" } } ] }\n');
   await vscode.commands.executeCommand("workbench.action.files.revert");
   await until("schema.json diagnostics", async () => vscode.languages.getDiagnostics(schema.uri).length > 0, 30000);
 });

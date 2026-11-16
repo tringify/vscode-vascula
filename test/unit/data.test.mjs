@@ -5,14 +5,17 @@ import { core, readJson, read, root } from "./helpers.mjs";
 
 const { regions, ctx, filters } = core;
 const contract = readJson(join(root, "data/contract.json"));
+const platform = readJson(join(root, "data/platform-fields.json"));
 
 test("filters: all Vascula built-ins and Tringify platform filters, each documented", () => {
   const builtins = filters.filters.filter((f) => f.source === "vascula").map((f) => f.name);
-  const platform = filters.filters.filter((f) => f.source === "tringify").map((f) => f.name);
-  // https://vascula.dev/filters lists these, and they match vascula's filters.go.
-  assert.equal(builtins.length, 50);
-  assert.deepEqual(platform.sort(), ["asset_url", "image_loading", "image_srcset", "image_url", "money", "placeholder_svg", "placeholder_video", "t"]);
-  assert.equal(new Set(builtins.concat(platform)).size, builtins.length + platform.length);
+  const platformFilters = filters.filters.filter((f) => f.source === "tringify").map((f) => f.name);
+  // Exactly Vascula's built-ins (engine filters.go), and only filters the theme check accepts
+  // (StorefrontFilters); scripts/generate.mjs --check enforces the same.
+  assert.deepEqual([...builtins].sort(), platform.values.vasculaBuiltinFilters);
+  for (const f of platformFilters) assert.ok(platform.values.StorefrontFilters.includes(f), f);
+  for (const f of ["format_number", "money_split", "money", "t"]) assert.ok(platformFilters.includes(f), f);
+  assert.equal(new Set(builtins.concat(platformFilters)).size, builtins.length + platformFilters.length);
   for (const f of filters.filters) assert.ok(f.doc && f.example && f.signature.startsWith(f.name), f.name);
   assert.match(filters.filterMarkdown(filters.filter("money")), /platform-filters#money/);
   assert.match(filters.filterMarkdown(filters.filter("sort_natural")), /vascula\.dev\/filters#sort-natural/);
@@ -32,8 +35,15 @@ test("snippets and section schema offer exactly the contract's setting types", (
   const snippets = readJson(join(root, "snippets/vascula.code-snippets"));
   const choice = /\$\{2\|([^|]+)\|\}/.exec(snippets.Setting.body)[1].split(",");
   assert.deepEqual([...choice].sort(), [...contract.setting_types].sort());
+  // Completion offers every type; uploads reject other types on settings with an editor block.
   const schema = readJson(join(root, "schemas/section.schema.json"));
-  assert.deepEqual(schema.definitions.setting.properties.type.enum, contract.setting_types);
+  assert.deepEqual(schema.definitions.setting.properties.type.defaultSnippets.map((s) => s.body), contract.setting_types);
+  const editable = schema.definitions.setting.allOf.find((r) => r.if?.required?.[0] === "editor").then.allOf[0];
+  assert.deepEqual(editable.properties.type.enum, contract.setting_types);
+  const advisory = readJson(join(root, "schemas/section.advisory.schema.json"));
+  assert.deepEqual(advisory.definitions.setting.properties.type.enum, contract.setting_types);
+  const settingsSchema = readJson(join(root, "schemas/settings-schema.schema.json"));
+  assert.deepEqual(settingsSchema.definitions.setting.properties.type.enum, contract.theme_setting_types);
   const forms = /form '\$\{1\|([^|]+)\|\}'/.exec(snippets.form.body[0])[1].split(",");
   const kinds = new Set(contract.hosted_actions.filter((a) => a.form_capable).map((a) => a.kind));
   for (const k of forms) assert.ok(kinds.has(k), k);

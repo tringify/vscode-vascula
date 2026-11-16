@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Runs the extension inside a real VS Code against a copy of the theme starter.
+// Runs the extension inside a real VS Code against a copy of Canvas, the default theme.
 //
 //   node test/e2e/run.mjs                  test the development build (run `npm run build` first)
 //   node test/e2e/run.mjs --vsix FILE      install FILE with the VS Code CLI and test the installed copy
@@ -19,13 +19,13 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const args = process.argv.slice(2);
 const vsixIndex = args.indexOf("--vsix");
 const vsix = vsixIndex >= 0 ? resolve(args[vsixIndex + 1]) : undefined;
-const starter = process.env.STARTER_DIR ?? join(root, "test/.starter");
-if (!existsSync(join(starter, "theme.json"))) throw new Error(`No theme starter at ${starter}. Run: npm run fetch-starter`);
+const canvas = process.env.CANVAS_DIR ?? join(root, "test/.canvas");
+if (!existsSync(join(canvas, "theme.json"))) throw new Error(`No Canvas checkout at ${canvas}. Run: npm run fetch-canvas`);
 
 const scratch = mkdtempSync(join(tmpdir(), "vscode-vascula-e2e-"));
 try {
   const workspace = join(scratch, "theme");
-  cpSync(starter, workspace, { recursive: true, filter: (p) => !p.includes(`${"/"}.git`) });
+  cpSync(canvas, workspace, { recursive: true, filter: (p) => !p.includes(`${"/"}.git`) });
 
   const vscodeExecutablePath = await downloadAndUnzipVSCode(process.env.VSCODE_VERSION ?? "stable");
   let extensionDevelopmentPath = root;
