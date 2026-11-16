@@ -19,6 +19,15 @@
 ##                      ^^ punctuation.section.embedded.begin.vascula
 ##                                         ^^^^ support.function.filter.vascula
 ##         ^^^^^ source.js
+   <style>.i { transition: border-color 0.2s, background 0.2s; color: Background; }</style>
+##                                            ^^^^^^^^^^ support.type.property-name.css
+##                                            ^^^^^^^^^^ - invalid.deprecated.color.system.css
+##                                                                    ^^^^^^^^^^ invalid.deprecated.color.system.css
+   <a{% if url %} href="{{ url }}"{% endif %}>x</a>
+##  ^ entity.name.tag.html
+##   ^^ punctuation.section.embedded.begin.vascula
+##      ^^ keyword.control.vascula
+##                ^^^^ entity.other.attribute-name.html
    {% schema %}
 ## ^^ punctuation.section.embedded.begin.vascula
 ##    ^^^^^^ keyword.other.schema.vascula
