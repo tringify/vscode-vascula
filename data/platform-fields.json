@@ -1,0 +1,483 @@
+{
+  "source": "32462942caee6ffc8590210a8fc44f373714d68e (vascula/*.go); vascula.dev/vascula v1.0.2-0.20261115174850-1560c1d75fee (filters.go)",
+  "structs": {
+    "sectionSchema": [
+      {
+        "name": "migrations",
+        "go": "[]Migration",
+        "omitempty": true
+      },
+      {
+        "name": "name",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "kind",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "target",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "ctx_needs",
+        "go": "[]string",
+        "omitempty": false
+      },
+      {
+        "name": "icon",
+        "go": "string",
+        "omitempty": true
+      },
+      {
+        "name": "preview_image",
+        "go": "string",
+        "omitempty": true
+      },
+      {
+        "name": "settings",
+        "go": "[]SettingDef",
+        "omitempty": false
+      },
+      {
+        "name": "blocks",
+        "go": "*BlockSchema",
+        "omitempty": true
+      },
+      {
+        "name": "presets",
+        "go": "[]PresetDef",
+        "omitempty": true
+      }
+    ],
+    "SettingDef": [
+      {
+        "name": "id",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "type",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "default",
+        "go": "interface{}",
+        "omitempty": true
+      },
+      {
+        "name": "options",
+        "go": "[]OptionDef",
+        "omitempty": true
+      },
+      {
+        "name": "fields",
+        "go": "[]ObjectFieldDef",
+        "omitempty": true
+      },
+      {
+        "name": "editor",
+        "go": "*EditorMeta",
+        "omitempty": true
+      },
+      {
+        "name": "min",
+        "go": "*float64",
+        "omitempty": true
+      },
+      {
+        "name": "max",
+        "go": "*float64",
+        "omitempty": true
+      },
+      {
+        "name": "step",
+        "go": "*float64",
+        "omitempty": true
+      },
+      {
+        "name": "unit",
+        "go": "string",
+        "omitempty": true
+      },
+      {
+        "name": "visible_if",
+        "go": "*VisibleIf",
+        "omitempty": true
+      },
+      {
+        "name": "owner",
+        "go": "string",
+        "omitempty": true
+      },
+      {
+        "name": "image",
+        "go": "string",
+        "omitempty": true
+      }
+    ],
+    "VisibleIf": [
+      {
+        "name": "setting",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "values",
+        "go": "[]string",
+        "omitempty": true
+      },
+      {
+        "name": "set",
+        "go": "*bool",
+        "omitempty": true
+      }
+    ],
+    "OptionDef": [
+      {
+        "name": "value",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "label",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "group",
+        "go": "string",
+        "omitempty": true
+      }
+    ],
+    "ObjectFieldDef": [
+      {
+        "name": "key",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "type",
+        "go": "string",
+        "omitempty": true
+      },
+      {
+        "name": "label",
+        "go": "string",
+        "omitempty": true
+      },
+      {
+        "name": "required",
+        "go": "bool",
+        "omitempty": true
+      },
+      {
+        "name": "max",
+        "go": "int",
+        "omitempty": true
+      },
+      {
+        "name": "options",
+        "go": "[]OptionDef",
+        "omitempty": true
+      }
+    ],
+    "EditorMeta": [
+      {
+        "name": "label",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "group",
+        "go": "string",
+        "omitempty": true
+      },
+      {
+        "name": "icon",
+        "go": "string",
+        "omitempty": true
+      }
+    ],
+    "BlockSchema": [
+      {
+        "name": "max",
+        "go": "int",
+        "omitempty": true
+      },
+      {
+        "name": "default",
+        "go": "[]string",
+        "omitempty": true
+      },
+      {
+        "name": "types",
+        "go": "[]BlockTypeDef",
+        "omitempty": false
+      },
+      {
+        "name": "accept_theme_blocks",
+        "go": "bool",
+        "omitempty": true
+      },
+      {
+        "name": "theme_blocks",
+        "go": "[]string",
+        "omitempty": true
+      },
+      {
+        "name": "accept_app_blocks",
+        "go": "bool",
+        "omitempty": true
+      }
+    ],
+    "BlockTypeDef": [
+      {
+        "name": "type",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "settings",
+        "go": "[]SettingDef",
+        "omitempty": true
+      },
+      {
+        "name": "editor",
+        "go": "*EditorMeta",
+        "omitempty": true
+      }
+    ],
+    "PresetDef": [
+      {
+        "name": "name",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "category",
+        "go": "string",
+        "omitempty": true
+      },
+      {
+        "name": "settings",
+        "go": "map[string]interface{}",
+        "omitempty": true
+      },
+      {
+        "name": "blocks",
+        "go": "[]PresetBlock",
+        "omitempty": true
+      }
+    ],
+    "PresetBlock": [
+      {
+        "name": "type",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "settings",
+        "go": "map[string]interface{}",
+        "omitempty": true
+      }
+    ],
+    "Migration": [
+      {
+        "name": "id",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "op",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "from_type",
+        "go": "string",
+        "omitempty": true
+      },
+      {
+        "name": "to_type",
+        "go": "string",
+        "omitempty": true
+      },
+      {
+        "name": "from",
+        "go": "*SettingLocation",
+        "omitempty": true
+      },
+      {
+        "name": "to",
+        "go": "*SettingLocation",
+        "omitempty": true
+      },
+      {
+        "name": "from_y",
+        "go": "*SettingLocation",
+        "omitempty": true
+      },
+      {
+        "name": "default",
+        "go": "json.RawMessage",
+        "omitempty": true
+      },
+      {
+        "name": "blocks",
+        "go": "[]MigrationBlock",
+        "omitempty": true
+      },
+      {
+        "name": "source_defaults",
+        "go": "map[string]json.RawMessage",
+        "omitempty": true
+      }
+    ],
+    "SettingLocation": [
+      {
+        "name": "block_type",
+        "go": "string",
+        "omitempty": true
+      },
+      {
+        "name": "setting",
+        "go": "string",
+        "omitempty": false
+      }
+    ],
+    "MigrationBlock": [
+      {
+        "name": "type",
+        "go": "string",
+        "omitempty": false
+      },
+      {
+        "name": "settings",
+        "go": "map[string]string",
+        "omitempty": false
+      },
+      {
+        "name": "copy",
+        "go": "map[string]string",
+        "omitempty": true
+      },
+      {
+        "name": "values",
+        "go": "map[string]json.RawMessage",
+        "omitempty": true
+      },
+      {
+        "name": "when",
+        "go": "[]string",
+        "omitempty": true
+      }
+    ],
+    "SettingsSchema": [
+      {
+        "name": "schema_version",
+        "go": "int",
+        "omitempty": false
+      },
+      {
+        "name": "settings",
+        "go": "[]SettingDef",
+        "omitempty": false
+      },
+      {
+        "name": "migrations",
+        "go": "[]Migration",
+        "omitempty": true
+      }
+    ]
+  },
+  "values": {
+    "metafieldSettingOwners": [
+      "blog_category",
+      "blog_post",
+      "brand",
+      "category",
+      "collection",
+      "customer",
+      "page",
+      "product",
+      "store",
+      "variant",
+      "vendor"
+    ],
+    "settingsSchemaVersion": 1,
+    "StorefrontFilters": [
+      "amount",
+      "asset_url",
+      "currency_code",
+      "date",
+      "format_number",
+      "image_loading",
+      "image_srcset",
+      "image_url",
+      "money",
+      "money_split",
+      "placeholder_svg",
+      "placeholder_video",
+      "price",
+      "t"
+    ],
+    "vasculaBuiltinFilters": [
+      "abs",
+      "append",
+      "at_least",
+      "at_most",
+      "capitalize",
+      "ceil",
+      "compact",
+      "concat",
+      "date",
+      "default",
+      "divided_by",
+      "downcase",
+      "escape",
+      "escape_once",
+      "first",
+      "floor",
+      "join",
+      "json",
+      "last",
+      "lstrip",
+      "map",
+      "minus",
+      "modulo",
+      "newline_to_br",
+      "plus",
+      "prepend",
+      "remove",
+      "remove_first",
+      "replace",
+      "replace_first",
+      "reverse",
+      "round",
+      "rstrip",
+      "size",
+      "slice",
+      "slug",
+      "sort",
+      "sort_natural",
+      "split",
+      "strip",
+      "strip_html",
+      "strip_newlines",
+      "sum",
+      "times",
+      "truncate",
+      "truncatewords",
+      "uniq",
+      "upcase",
+      "url_decode",
+      "url_encode",
+      "where"
+    ]
+  }
+}
