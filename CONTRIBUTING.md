@@ -4,7 +4,7 @@ The tests need Node.js 20 or newer.
 
 ```sh
 npm ci
-npm run fetch-starter   # the theme starter used as a test corpus
+npm run fetch-canvas    # Canvas, the default theme, used as a test corpus
 npm test                # generated-file check, type check, grammar tests, unit tests
 npm run package         # dist/vscode-vascula-<version>.vsix
 xvfb-run -a npm run test:e2e -- --vsix dist/vscode-vascula-<version>.vsix   # in a real VS Code

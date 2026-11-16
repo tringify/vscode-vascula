@@ -35,8 +35,8 @@ const hoverText = (hovers) =>
 const tests = [];
 const test = (name, fn) => tests.push({ name, fn });
 
-test("a starter section opens as Vascula and is highlighted by the extension's grammar", async () => {
-  const { doc } = await open("sections/starter-product.vasc");
+test("a Canvas section opens as Vascula and is highlighted by the extension's grammar", async () => {
+  const { doc } = await open("sections/main-product.vasc");
   assert.equal(doc.languageId, "vascula");
   const tokens = await until("syntax tokens", async () => {
     const t = await vscode.commands.executeCommand("_workbench.captureSyntaxTokens", doc.uri);
@@ -53,7 +53,7 @@ test("a starter section opens as Vascula and is highlighted by the extension's g
   assert.equal(scoped((s) => /\binvalid\./.test(s)).length, 0, "nothing is invalid");
 });
 
-test("every starter section and block has no diagnostics", async () => {
+test("every Canvas section and block has no diagnostics", async () => {
   const files = await vscode.workspace.findFiles("{sections,blocks}/*.vasc");
   assert.ok(files.length >= 40);
   for (const uri of files) {

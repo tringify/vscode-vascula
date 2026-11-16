@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { join, relative } from "node:path";
 import { createRequire } from "node:module";
-import { core, starterDir, files, read, readJson, root } from "./helpers.mjs";
+import { core, canvasDir, files, read, readJson, root } from "./helpers.mjs";
 
 const require = createRequire(import.meta.url);
 const { getLanguageService, TextDocument } = require("vscode-json-languageservice");
@@ -30,36 +30,36 @@ async function check(text, path = "sections/hero.vasc") {
   return sectionSchema.validate("file:///" + path, text, { hints: true, path });
 }
 
-test("every theme-starter section and block validates with no errors or warnings", async () => {
-  const vasc = [...files(join(starterDir, "sections"), ".vasc"), ...files(join(starterDir, "blocks"), ".vasc")];
-  assert.ok(vasc.length >= 40, `expected the starter's sections, found ${vasc.length}`);
+test("every Canvas section and block validates with no errors or warnings", async () => {
+  const vasc = [...files(join(canvasDir, "sections"), ".vasc"), ...files(join(canvasDir, "blocks"), ".vasc")];
+  assert.ok(vasc.length >= 40, `expected Canvas's sections, found ${vasc.length}`);
   for (const f of vasc) {
-    const ds = await check(read(f), relative(starterDir, f));
-    assert.equal(ds.length, 0, `${relative(starterDir, f)}:\n${fmt(ds)}`);
+    const ds = await check(read(f), relative(canvasDir, f));
+    assert.equal(ds.length, 0, `${relative(canvasDir, f)}:\n${fmt(ds)}`);
   }
 });
 
-test("starter src/sections/*/schema.json validate against the section schema", async () => {
-  const schemas = files(join(starterDir, "src/sections"), "schema.json");
+test("Canvas src/sections/*/schema.json validate against the section schema", async () => {
+  const schemas = files(join(canvasDir, "src/sections"), "schema.json");
   assert.ok(schemas.length >= 30);
   for (const f of schemas) {
     const ds = await validateJson("section.schema.json", read(f));
-    assert.equal(ds.length, 0, `${relative(starterDir, f)}:\n${fmt(ds)}`);
+    assert.equal(ds.length, 0, `${relative(canvasDir, f)}:\n${fmt(ds)}`);
   }
 });
 
-test("starter theme.json, templates, settings schema and presets validate", async () => {
+test("Canvas theme.json, templates, settings schema and presets validate", async () => {
   const cases = [
-    ["theme.schema.json", [join(starterDir, "theme.json")]],
-    ["template.schema.json", files(join(starterDir, "templates"), ".json")],
-    ["settings-schema.schema.json", [join(starterDir, "config/settings_schema.json")]],
-    ["preset.schema.json", files(join(starterDir, "config/presets"), ".json")],
+    ["theme.schema.json", [join(canvasDir, "theme.json")]],
+    ["template.schema.json", files(join(canvasDir, "templates"), ".json")],
+    ["settings-schema.schema.json", [join(canvasDir, "config/settings_schema.json")]],
+    ["preset.schema.json", files(join(canvasDir, "config/presets"), ".json")],
   ];
   for (const [schema, list] of cases) {
     assert.ok(list.length > 0, schema);
     for (const f of list) {
       const ds = await validateJson(schema, read(f));
-      assert.equal(ds.length, 0, `${relative(starterDir, f)}:\n${fmt(ds)}`);
+      assert.equal(ds.length, 0, `${relative(canvasDir, f)}:\n${fmt(ds)}`);
     }
   }
 });

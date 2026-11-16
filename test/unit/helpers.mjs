@@ -9,10 +9,10 @@ const require = createRequire(import.meta.url);
 /** The bundled, VS Code-free part of the extension (built by `npm run build:core`). */
 export const core = require(join(root, "out/core.js"));
 
-/** A checkout of https://github.com/tringify/theme-starter (see test/fetch-starter.mjs). */
-export const starterDir = process.env.STARTER_DIR ?? join(root, "test/.starter");
-if (!existsSync(join(starterDir, "theme.json"))) {
-  throw new Error(`No theme starter at ${starterDir}. Run: node test/fetch-starter.mjs`);
+/** A checkout of https://github.com/tringify/canvas, Canvas (see test/fetch-canvas.mjs). */
+export const canvasDir = process.env.CANVAS_DIR ?? join(root, "test/.canvas");
+if (!existsSync(join(canvasDir, "theme.json"))) {
+  throw new Error(`No Canvas checkout at ${canvasDir}. Run: node test/fetch-canvas.mjs`);
 }
 
 export function files(dir, ext) {
