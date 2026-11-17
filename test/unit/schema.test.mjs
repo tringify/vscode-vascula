@@ -75,8 +75,8 @@ test("upload-rejected mistakes are errors", async () => {
     [(s) => s.settings.push({ id: "v", type: "text", editor: ed, visible_if: { setting: "heading", values: [] } }), /Array has too few items/],
     [(s) => s.settings.push({ id: "o", type: "object", editor: ed, fields: [{ key: "a", type: "zzz" }] }), /Value is not accepted/],
     [(s) => ((s.kind = "block"), (s.presets = [{ name: "x" }])), /A theme block has no presets/],
-    // Platform rules added with the theme tools v0.1.75 contract (vascula/section.go, migrations.go).
-    [(s) => (s.ctx_needs = ["review_notice"]), /Unknown CTX name/], // no longer a CTX root
+    // Platform rules for section schemas and migrations.
+    [(s) => (s.ctx_needs = ["review_notice"]), /Unknown CTX name/], // not a CTX root
     [(s) => (s.settings[0].type = "css"), /Value is not accepted/], // a theme setting type, not a section one
     [(s) => s.settings.push({ id: "v", type: "text", editor: ed, visible_if: { setting: "heading", values: ["a"], set: true } }), /visible_if takes exactly one of values and set/],
     [(s) => s.settings.push({ id: "v", type: "text", editor: ed, visible_if: { setting: "heading" } }), /visible_if needs values or set/],

@@ -847,7 +847,7 @@ emit("schemas/template.schema.json", {
 // config/settings_schema.json, config/presets/*.json, config/metafields.json
 
 // The same SettingDef as section settings, with the theme setting types. Every setting is
-// checked here, with or without `editor` (ParseSettingsSchema).
+// checked here, with or without `editor`, as on upload.
 function themeSettingDef() {
   const d = settingDef(false);
   d.required = ["id", "type"];
@@ -1010,6 +1010,8 @@ emit("schemas/metafields.schema.json", {
   const problems = [];
   for (const f of documented) {
     if (f.source === "vascula" && !builtins.has(f.name)) problems.push(`${f.name} is not a Vascula built-in filter`);
+    // A storefront filter with a built-in's name replaces it in themes.
+    if (f.source === "vascula" && storefront.has(f.name)) problems.push(`${f.name} is a storefront filter in themes; document it with source "tringify"`);
     if (f.source === "tringify" && !storefront.has(f.name)) problems.push(`${f.name} is not a storefront filter`);
   }
   const names = new Set(documented.map((f) => f.name));
