@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Print the contract
         run: |
           curl -fsSL https://raw.githubusercontent.com/tringify/cli/main/install.sh | TRINGIFY_CLI_BIN=/tmp/bin sh

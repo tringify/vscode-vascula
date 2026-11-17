@@ -41,14 +41,16 @@ jobs:
     name: Publish to marketplaces
     needs: release
     runs-on: ubuntu-latest
-    env:
-      VSCE_PAT: ${{ secrets.VSCE_PAT }}
-      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+    # Both marketplaces trust this workflow (trusted publishing): the job's OIDC token
+    # replaces access tokens.
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - uses: actions/download-artifact@v4
@@ -56,12 +58,6 @@ jobs:
           name: vsix
           path: dist
       - name: Visual Studio Marketplace
-        if: env.VSCE_PAT != ''
-        run: npx vsce publish --packagePath dist/*.vsix
+        run: npx @vscode/vsce publish --oidc --packagePath "dist/vscode-vascula-${GITHUB_REF_NAME#v}.vsix"
       - name: Open VSX
-        if: env.OVSX_PAT != ''
-        run: npx ovsx publish dist/*.vsix
-      - name: Report skipped marketplaces
-        run: |
-          [ -n "$VSCE_PAT" ] || echo "::notice::VSCE_PAT is not set: skipped the Visual Studio Marketplace."
-          [ -n "$OVSX_PAT" ] || echo "::notice::OVSX_PAT is not set: skipped Open VSX."
+        run: npx ovsx publish --trusted-publishing --packagePath "dist/vscode-vascula-${GITHUB_REF_NAME#v}.vsix"

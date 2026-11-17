@@ -1,6 +1,6 @@
 # Contributing
 
-The tests need Node.js 20 or newer.
+The tests and packaging need Node.js 22 or newer.
 
 ```sh
 npm ci

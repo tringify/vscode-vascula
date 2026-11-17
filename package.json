@@ -2,7 +2,7 @@
   "name": "vscode-vascula",
   "displayName": "Vascula for Tringify Themes",
   "description": "Syntax highlighting, snippets, filter docs and theme-file validation for Vascula templates and Tringify themes.",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "publisher": "tringify",
   "license": "MIT",
   "icon": "icon.png",
@@ -154,9 +154,9 @@
     "@types/node": "^20.14.0",
     "@types/vscode": "~1.85.0",
     "@vscode/test-electron": "^2.4.1",
-    "@vscode/vsce": "^3.2.1",
+    "@vscode/vsce": "^4.1.1",
     "esbuild": "^0.28.2",
-    "ovsx": "^0.10.1",
+    "ovsx": "^1.4.0",
     "typescript": "^5.6.3",
     "vscode-oniguruma": "^2.0.1",
     "vscode-textmate": "^9.1.0",
@@ -164,7 +164,6 @@
   },
   "overrides": {
     "@vscode/vsce": {
-      "glob": "^14.0.6",
       "minimatch": "^11.0.5"
     }
   }
