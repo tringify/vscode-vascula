@@ -3,16 +3,14 @@
 //
 //   node scripts/generate.mjs                     regenerate schemas from data/contract.json
 //   node scripts/generate.mjs --contract FILE     import `tringify theme contract` output first
-//   node scripts/generate.mjs --platform FILE     check against FILE instead of data/platform-fields.json
 //   node scripts/generate.mjs --check             fail if any generated file is out of date, or if the
-//                                                 schemas disagree with data/platform-fields.json
+//                                                 schemas or data/filters.json disagree with the contract
 //
-// The contract comes from the Tringify CLI (`tringify theme contract`, https://github.com/tringify/cli),
-// or the theme tools' `tringify-theme contract` (https://github.com/tringify/theme-tools). It carries
-// the vocabularies: setting types, theme setting types, CTX names and fields, migration operations.
-// The fields of a section schema, settings_schema.json and migrations, with their JSON types, come
-// from data/platform-fields.json (written by scripts/platform-fields.mjs from the theme check source).
-// Other rules (manifest and template shapes) follow https://dev-docs.tringify.com/themes/.
+// The contract comes from the Tringify CLI (`tringify theme contract`, https://github.com/tringify/cli).
+// It carries the vocabularies (setting types, theme setting types, CTX names and fields, migration
+// operations), the JSON fields of the structs a section schema, settings_schema.json and migrations
+// are decoded into, the metafield setting owners, the settings schema version, and the filters a
+// theme may call. Other rules (manifest and template shapes) follow https://dev-docs.tringify.com/themes/.
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -30,7 +28,7 @@ const emit = (path, value) => outputs.set(path, JSON.stringify(value, null, 2) +
 // Contract import
 
 function trimContract(full, source) {
-  if (full.schema_version !== 3 || !full.ctx || full.ctx.schema_version !== 1) {
+  if (full.schema_version !== 3 || !full.ctx || full.ctx.schema_version !== 1 || !full.schema_fields || !full.filters) {
     throw new Error("unsupported theme author contract");
   }
   return {
@@ -52,6 +50,10 @@ function trimContract(full, source) {
       multipart: a.multipart,
       fields: a.fields.map((f) => ({ name: f.name, required: f.required, description: f.description })),
     })),
+    schema_fields: full.schema_fields,
+    metafield_setting_owners: full.metafield_setting_owners,
+    settings_schema_version: full.settings_schema_version,
+    filters: full.filters,
   };
 }
 
@@ -65,9 +67,6 @@ if (contractArg >= 0) {
 } else {
   contract = JSON.parse(readFileSync(join(root, "data/contract.json"), "utf8"));
 }
-// --platform FILE checks against another copy (the tests use it to prove the check fails).
-const platformArg = args.indexOf("--platform");
-const platform = JSON.parse(readFileSync(platformArg >= 0 ? args[platformArg + 1] : join(root, "data/platform-fields.json"), "utf8"));
 
 // ---------------------------------------------------------------------------
 // Shared vocabulary
@@ -197,9 +196,8 @@ for (const r of roots) {
 // Section schema
 //
 // The field lists, their JSON types and the rules below follow the structs and checks the
-// upload uses to read a {% schema %} block (vascula/section.go and vascula/migrations.go in
-// the theme check source). data/platform-fields.json records those structs, and
-// checkPlatformFields() at the end of this file fails when the two disagree.
+// upload uses to read a {% schema %} block. The contract's schema_fields lists those structs,
+// and checkSchemaFields() at the end of this file fails when the two disagree.
 //
 // Strict schema (errors): what an upload rejects. The upload decodes the schema with Go's
 // encoding/json, so a field of the wrong JSON type is rejected; unknown keys are ignored,
@@ -344,7 +342,7 @@ function settingDef(advisory) {
       visible_if: { $ref: "#/definitions/visibleIf" },
       owner: {
         type: "string",
-        ...enumOf(platform.values.metafieldSettingOwners, (o) => `Metafield definitions of ${o === "store" ? "the store" : "a " + o.replace("_", " ")}.`),
+        ...enumOf(contract.metafield_setting_owners, (o) => `Metafield definitions of ${o === "store" ? "the store" : "a " + o.replace("_", " ")}.`),
         markdownDescription: "For `metafield` (required): the resource whose metafield definitions the merchant picks from. Only `metafield` settings take `owner`.",
       },
       image: {
@@ -909,8 +907,8 @@ const settingsSchemaDoc = {
     properties: {
       schema_version: {
         type: "integer",
-        const: platform.values.settingsSchemaVersion,
-        description: `The settings schema version: ${platform.values.settingsSchemaVersion}.`,
+        const: contract.settings_schema_version,
+        description: `The settings schema version: ${contract.settings_schema_version}.`,
       },
       settings: { type: "array", items: { $ref: "#/definitions/setting" } },
       migrations: {
@@ -1007,52 +1005,36 @@ emit("schemas/metafields.schema.json", {
 
 {
   const documented = JSON.parse(readFileSync(join(root, "data/filters.json"), "utf8")).filters;
-  // In the theme check's StorefrontFilters, but not on the platform filters page and not in
-  // the storefront's HostFilters source this was checked against, so there is nothing
-  // reliable to document. Completion does not offer them; the theme check accepts them.
-  const UNDOCUMENTED = ["amount", "currency_code", "price"];
-  const builtins = new Set(platform.values.vasculaBuiltinFilters);
-  const storefront = new Set(platform.values.StorefrontFilters);
+  const builtins = new Set(contract.filters.vascula);
+  const storefront = new Set(contract.filters.storefront);
   const problems = [];
   for (const f of documented) {
     if (f.source === "vascula" && !builtins.has(f.name)) problems.push(`${f.name} is not a Vascula built-in filter`);
-    if (f.source === "tringify" && !storefront.has(f.name)) problems.push(`${f.name} is not in StorefrontFilters`);
+    if (f.source === "tringify" && !storefront.has(f.name)) problems.push(`${f.name} is not a storefront filter`);
   }
   const names = new Set(documented.map((f) => f.name));
   for (const n of [...builtins, ...storefront]) {
-    if (!names.has(n) && !UNDOCUMENTED.includes(n)) problems.push(`${n} is a filter themes may call, but data/filters.json does not document it`);
-  }
-  for (const n of UNDOCUMENTED) {
-    if (!storefront.has(n)) problems.push(`${n} is no longer in StorefrontFilters; remove it from UNDOCUMENTED`);
-    if (names.has(n)) problems.push(`${n} is documented now; remove it from UNDOCUMENTED`);
+    if (!names.has(n)) problems.push(`${n} is a filter themes may call, but data/filters.json does not document it`);
   }
   if (problems.length) {
-    console.error("data/filters.json disagrees with data/platform-fields.json:\n  " + problems.join("\n  "));
+    console.error("data/filters.json disagrees with the contract's filters:\n  " + problems.join("\n  "));
     process.exit(1);
   }
 }
 
 // ---------------------------------------------------------------------------
-// The schemas against the platform's structs (data/platform-fields.json)
+// The schemas against the contract's schema_fields
 //
 // Each schema object must list exactly the struct's JSON fields, with the JSON type the
 // upload decodes them as. A field the platform adds, drops or retypes fails here until
 // the schema above describes it.
 
-function checkPlatformFields() {
+function checkSchemaFields() {
+  const { structs } = contract.schema_fields;
   const problems = [];
-  const jsonType = (go) => {
-    const g = go.replace(/^\*/, "");
-    if (g === "string") return { type: "string" };
-    if (g === "bool") return { type: "boolean" };
-    if (/^u?int(8|16|32|64)?$/.test(g)) return { type: "integer" };
-    if (/^float(32|64)$/.test(g)) return { type: "number" };
-    if (g.startsWith("[]")) return { type: "array", items: jsonType(g.slice(2)) };
-    if (g.startsWith("map[")) return { type: "object" };
-    if (g === "interface{}" || g === "any" || g === "json.RawMessage") return {};
-    return { type: "object", struct: g };
-  };
   const deref = (doc, s) => (s && s.$ref ? doc.definitions[s.$ref.replace("#/definitions/", "")] : s);
+  // A field of JSON type "any" takes any value; the schema may narrow it.
+  const typed = (t) => t && t.type !== "any";
   // subset: structs the schema deliberately narrows (theme setting migrations take only
   // rename_setting and remove_setting, without block_type): no field may be missing from
   // the struct, but struct fields may be left out.
@@ -1060,8 +1042,8 @@ function checkPlatformFields() {
     const key = where.split(" ")[0] + ":" + struct;
     if (seen.has(key)) return;
     seen.add(key);
-    const fields = platform.structs[struct];
-    if (!fields) return problems.push(`${where}: no struct ${struct} in data/platform-fields.json`);
+    const fields = structs[struct];
+    if (!fields) return problems.push(`${where}: no struct ${struct} in the contract's schema_fields`);
     const props = schema.properties || {};
     const names = fields.map((f) => f.name);
     if (!subset.has(struct)) for (const n of names) if (!(n in props)) problems.push(`${where}: ${struct}.${n} is not in the schema`);
@@ -1069,27 +1051,26 @@ function checkPlatformFields() {
     for (const f of fields) {
       const p = props[f.name];
       if (!p) continue;
-      const want = jsonType(f.go);
       const got = deref(doc, p);
-      if (want.type && got.type !== want.type) problems.push(`${where}: ${struct}.${f.name} is ${f.go}, so the schema type is ${want.type}, not ${got.type}`);
-      if (want.struct) compare(`${where} ${f.name}`, doc, got, want.struct, seen, subset);
-      if (want.items) {
+      if (typed(f) && got.type !== f.type) problems.push(`${where}: ${struct}.${f.name} is ${f.go}, so the schema type is ${f.type}, not ${got.type}`);
+      if (f.struct) compare(`${where} ${f.name}`, doc, got, f.struct, seen, subset);
+      if (f.items) {
         const items = deref(doc, got.items || {});
-        if (want.items.type && items.type !== want.items.type) problems.push(`${where}: ${struct}.${f.name} items are ${want.items.type}, not ${items.type}`);
-        if (want.items.struct) compare(`${where} ${f.name}[]`, doc, items, want.items.struct, seen, subset);
+        if (typed(f.items) && items.type !== f.items.type) problems.push(`${where}: ${struct}.${f.name} items are ${f.items.type}, not ${items.type}`);
+        if (f.items.struct) compare(`${where} ${f.name}[]`, doc, items, f.items.struct, seen, subset);
       }
     }
   };
   for (const [name, doc] of [["section.schema.json", sectionStrict], ["section.advisory.schema.json", sectionAdvisory]]) {
-    compare(name, doc, doc, "sectionSchema");
+    compare(name, doc, doc, contract.schema_fields.section_schema);
   }
-  compare("settings-schema.schema.json", settingsSchemaDoc, settingsSchemaDoc.then, "SettingsSchema", new Set(), new Set(["Migration", "SettingLocation"]));
+  compare("settings-schema.schema.json", settingsSchemaDoc, settingsSchemaDoc.then, contract.schema_fields.settings_schema, new Set(), new Set(["Migration", "SettingLocation"]));
   if (problems.length) {
-    console.error("The schemas disagree with data/platform-fields.json:\n  " + [...new Set(problems)].join("\n  "));
+    console.error("The schemas disagree with the contract's schema_fields:\n  " + [...new Set(problems)].join("\n  "));
     process.exit(1);
   }
 }
-checkPlatformFields();
+checkSchemaFields();
 
 // ---------------------------------------------------------------------------
 // Write or check

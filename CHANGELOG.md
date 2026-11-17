@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Everything is read from `tringify theme contract` (theme tools v0.1.76), which now lists the JSON fields of section schemas, `config/settings_schema.json` and migrations, the metafield setting owners and the filters a theme may call. The weekly contract check catches any change to them.
+- Development dependencies updated; `npm audit` reports no vulnerabilities.
+
 ## 0.2.0 (2026-11-17)
 
 - Schemas, CTX names and setting types follow the theme author contract of theme tools v0.1.75 (`tringify theme contract`). Canvas, the default theme, now shows no diagnostics; before, 199 false ones in 77 files.
@@ -9,7 +14,7 @@
 - Style templates (`templates/styles/<style>/*.json`) are validated like `templates/*.json`.
 - Filters: `slug`, `format_number` and `money_split`.
 - Highlighting: `transition: background 0.2s` is no longer marked as a deprecated system colour, and `<a{% if url %} href="…"{% endif %}>` reads the markup as Vascula, not as part of the tag name.
-- `npm test` fails when the schemas or filters disagree with the platform's structs and filter lists (`data/platform-fields.json`, written by `scripts/platform-fields.mjs`).
+- `npm test` fails when the schemas or filters disagree with the theme author contract.
 
 ## 0.1.1
 
