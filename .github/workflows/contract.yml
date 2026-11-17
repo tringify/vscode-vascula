@@ -1,7 +1,8 @@
 name: Theme contract
 
-# Fails when the latest theme tools release prints a different author contract,
-# so the schemas can be regenerated.
+# Fails when the latest theme tools release prints a different author contract: new or
+# changed vocabularies, CTX fields, schema fields or filters. Regenerate with the new
+# contract (see CONTRIBUTING.md).
 on:
   schedule:
     - cron: "17 6 * * 1"
@@ -19,18 +20,8 @@ jobs:
         with:
           node-version: 20
       - name: Print the contract
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          # Prefer the Tringify CLI; fall back to the theme tools' Python command.
-          if curl -fsSL https://raw.githubusercontent.com/tringify/cli/main/install.sh | TRINGIFY_CLI_BIN=/tmp/bin sh &&
-            /tmp/bin/tringify theme contract > /tmp/contract.json; then
-            echo "Printed with the Tringify CLI"
-          else
-            gh release download -R tringify/theme-tools -p 'tringify-theme-tools-linux-amd64.zip' -p SHA256SUMS -D /tmp/tt
-            (cd /tmp/tt && sha256sum -c SHA256SUMS --ignore-missing)
-            unzip -q /tmp/tt/tringify-theme-tools-linux-amd64.zip -d /tmp/tt
-            /tmp/tt/tringify-theme-tools/tringify-theme contract > /tmp/contract.json
-          fi
+          curl -fsSL https://raw.githubusercontent.com/tringify/cli/main/install.sh | TRINGIFY_CLI_BIN=/tmp/bin sh
+          /tmp/bin/tringify theme contract > /tmp/contract.json
       - name: Compare the contract
         run: node scripts/generate.mjs --check --contract /tmp/contract.json --source "$(node -p 'require("./data/contract.json").source')"
