@@ -1,0 +1,318 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/tringify/vscode-vascula/schemas/theme.schema.json",
+  "title": "Tringify theme manifest",
+  "markdownDescription": "The theme manifest, `theme.json`.\n\n[Documentation](https://dev-docs.tringify.com/themes/theme-package-structure#themejson)",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "markdownDescription": "Tringify theme manifests use schema version `3`."
+    }
+  },
+  "if": {
+    "required": [
+      "schema_version"
+    ],
+    "properties": {
+      "schema_version": {
+        "type": "number"
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "schema_version",
+      "name",
+      "source",
+      "status",
+      "sections",
+      "surfaces"
+    ],
+    "properties": {
+      "schema_version": {
+        "const": 3,
+        "description": "The manifest schema version."
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "description": "The theme's name, up to 80 characters."
+      },
+      "source": {
+        "const": "uploaded",
+        "description": "Must be uploaded."
+      },
+      "status": {
+        "enum": [
+          "draft",
+          "published"
+        ],
+        "description": "draft or published."
+      },
+      "default_locale": {
+        "type": "string",
+        "description": "The theme's default locale, such as en. Required when the package contains locale files."
+      },
+      "exported_from": {
+        "description": "Provenance written by theme exports."
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "description": "Every section file, listed exactly once.",
+        "items": {
+          "type": "object",
+          "required": [
+            "name",
+            "file"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Must match the section schema's name."
+            },
+            "kind": {
+              "enum": [
+                "section",
+                "layout",
+                "embed"
+              ],
+              "description": "Must match the section schema's kind."
+            },
+            "file": {
+              "type": "string",
+              "pattern": "^sections/[^/]+\\.vasc$",
+              "description": "sections/<name>.vasc"
+            },
+            "target": {
+              "enum": [
+                "global_body_start",
+                "global_body_end",
+                "global_overlay"
+              ],
+              "description": "Must match the section schema's target."
+            },
+            "origin": {
+              "type": "string",
+              "description": "Provenance written by theme exports."
+            }
+          },
+          "defaultSnippets": [
+            {
+              "body": {
+                "name": "$1",
+                "kind": "section",
+                "file": "sections/$1.vasc"
+              }
+            }
+          ]
+        }
+      },
+      "surfaces": {
+        "type": "array",
+        "minItems": 1,
+        "description": "The editable surfaces and the sections each requires or allows.",
+        "items": {
+          "type": "object",
+          "required": [
+            "surface_key"
+          ],
+          "properties": {
+            "surface_key": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "errorMessage": "A surface key is lower-case letters, digits and underscores, such as product or global_body_start.",
+              "defaultSnippets": [
+                {
+                  "label": "home",
+                  "markdownDescription": "The `home` page.",
+                  "body": "home"
+                },
+                {
+                  "label": "shop",
+                  "markdownDescription": "The `shop` page.",
+                  "body": "shop"
+                },
+                {
+                  "label": "product",
+                  "markdownDescription": "The `product` page.",
+                  "body": "product"
+                },
+                {
+                  "label": "collection",
+                  "markdownDescription": "The `collection` page.",
+                  "body": "collection"
+                },
+                {
+                  "label": "collection_list",
+                  "markdownDescription": "The `collection_list` page.",
+                  "body": "collection_list"
+                },
+                {
+                  "label": "category",
+                  "markdownDescription": "The `category` page.",
+                  "body": "category"
+                },
+                {
+                  "label": "category_list",
+                  "markdownDescription": "The `category_list` page.",
+                  "body": "category_list"
+                },
+                {
+                  "label": "page",
+                  "markdownDescription": "The `page` page.",
+                  "body": "page"
+                },
+                {
+                  "label": "policy",
+                  "markdownDescription": "The `policy` page.",
+                  "body": "policy"
+                },
+                {
+                  "label": "blog",
+                  "markdownDescription": "The `blog` page.",
+                  "body": "blog"
+                },
+                {
+                  "label": "blog_list",
+                  "markdownDescription": "The `blog_list` page.",
+                  "body": "blog_list"
+                },
+                {
+                  "label": "blog_category",
+                  "markdownDescription": "The `blog_category` page.",
+                  "body": "blog_category"
+                },
+                {
+                  "label": "vendor",
+                  "markdownDescription": "The `vendor` page.",
+                  "body": "vendor"
+                },
+                {
+                  "label": "vendor_list",
+                  "markdownDescription": "The `vendor_list` page.",
+                  "body": "vendor_list"
+                },
+                {
+                  "label": "brand",
+                  "markdownDescription": "The `brand` page.",
+                  "body": "brand"
+                },
+                {
+                  "label": "brand_list",
+                  "markdownDescription": "The `brand_list` page.",
+                  "body": "brand_list"
+                },
+                {
+                  "label": "search",
+                  "markdownDescription": "The `search` page.",
+                  "body": "search"
+                },
+                {
+                  "label": "cart",
+                  "markdownDescription": "The `cart` page.",
+                  "body": "cart"
+                },
+                {
+                  "label": "wishlist",
+                  "markdownDescription": "The `wishlist` page.",
+                  "body": "wishlist"
+                },
+                {
+                  "label": "track_order",
+                  "markdownDescription": "The `track_order` page.",
+                  "body": "track_order"
+                },
+                {
+                  "label": "account",
+                  "markdownDescription": "The `account` page.",
+                  "body": "account"
+                },
+                {
+                  "label": "login",
+                  "markdownDescription": "The `login` page.",
+                  "body": "login"
+                },
+                {
+                  "label": "register",
+                  "markdownDescription": "The `register` page.",
+                  "body": "register"
+                },
+                {
+                  "label": "not_found",
+                  "markdownDescription": "The `not_found` page.",
+                  "body": "not_found"
+                },
+                {
+                  "label": "coming_soon",
+                  "markdownDescription": "The `coming_soon` page.",
+                  "body": "coming_soon"
+                },
+                {
+                  "label": "maintenance",
+                  "markdownDescription": "The `maintenance` page.",
+                  "body": "maintenance"
+                },
+                {
+                  "label": "password",
+                  "markdownDescription": "The `password` page.",
+                  "body": "password"
+                },
+                {
+                  "label": "unavailable",
+                  "markdownDescription": "The `unavailable` page.",
+                  "body": "unavailable"
+                },
+                {
+                  "label": "global_body_start",
+                  "markdownDescription": "Global surface `global_body_start`.",
+                  "body": "global_body_start"
+                },
+                {
+                  "label": "global_body_end",
+                  "markdownDescription": "Global surface `global_body_end`.",
+                  "body": "global_body_end"
+                },
+                {
+                  "label": "global_overlay",
+                  "markdownDescription": "Global surface `global_overlay`.",
+                  "body": "global_overlay"
+                }
+              ],
+              "description": "A registered, theme-editable surface."
+            },
+            "required_sections": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "description": "Sections that must appear exactly once on this surface."
+            },
+            "allowed_sections": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "description": "Sections a merchant may add. A section cannot be both required and allowed."
+            }
+          },
+          "defaultSnippets": [
+            {
+              "body": {
+                "surface_key": "$1",
+                "required_sections": [
+                  "$2"
+                ],
+                "allowed_sections": []
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

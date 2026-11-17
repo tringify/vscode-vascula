@@ -1,0 +1,27 @@
+name: Theme contract
+
+# Fails when the latest theme tools release prints a different author contract: new or
+# changed vocabularies, CTX fields, schema fields or filters. Regenerate with the new
+# contract (see CONTRIBUTING.md).
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Print the contract
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/tringify/cli/main/install.sh | TRINGIFY_CLI_BIN=/tmp/bin sh
+          /tmp/bin/tringify theme contract > /tmp/contract.json
+      - name: Compare the contract
+        run: node scripts/generate.mjs --check --contract /tmp/contract.json --source "$(node -p 'require("./data/contract.json").source')"

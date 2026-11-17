@@ -1,0 +1,53 @@
+## SYNTAX TEST "text.html.vascula" "markup inside HTML attributes, style and script; the schema block as JSON"
+   <a href="{{ p.url }}"{% if new_tab %} target="_blank"{% endif %}>x</a>
+##          ^^ punctuation.section.embedded.begin.vascula
+##             ^ variable.other.vascula
+##                      ^^ punctuation.section.embedded.begin.vascula
+##                         ^^ keyword.control.vascula
+##    ^^^^ entity.other.attribute-name.html
+##                                       ^^^^^^ entity.other.attribute-name.html
+   <img src="{{ img | image_url: width: 800 }}" {{ img | image_loading }} alt="">
+##                    ^^^^^^^^^ support.function.filter.vascula
+##                               ^^^^^ variable.parameter.vascula
+##                                      ^^^ constant.numeric.vascula
+##                                                       ^^^^^^^^^^^^^ support.function.filter.vascula
+   <style>.x { color: {{ settings.color }}; }</style>
+##                    ^^ punctuation.section.embedded.begin.vascula
+##                       ^^^^^^^^ variable.language.vascula
+##             ^^^^^ source.css
+   <script>const data = {{ settings.data | json }};</script>
+##                      ^^ punctuation.section.embedded.begin.vascula
+##                                         ^^^^ support.function.filter.vascula
+##         ^^^^^ source.js
+   <style>.i { transition: border-color 0.2s, background 0.2s; color: Background; }</style>
+##                                            ^^^^^^^^^^ support.type.property-name.css
+##                                            ^^^^^^^^^^ - invalid.deprecated.color.system.css
+##                                                                    ^^^^^^^^^^ invalid.deprecated.color.system.css
+   <a{% if url %} href="{{ url }}"{% endif %}>x</a>
+##  ^ entity.name.tag.html
+##   ^^ punctuation.section.embedded.begin.vascula
+##      ^^ keyword.control.vascula
+##                ^^^^ entity.other.attribute-name.html
+   {% schema %}
+## ^^ punctuation.section.embedded.begin.vascula
+##    ^^^^^^ keyword.other.schema.vascula
+##           ^^ punctuation.section.embedded.end.vascula
+   {
+## ^ source.json
+     "name": "hero",
+##   ^^^^^^ support.type.property-name.json
+##           ^^^^^^ string.quoted.double.json
+     "settings": [ { "id": "heading", "default": "{{ not vascula }}" } ],
+##                                                ^^ string.quoted.double.json
+##                                                ^^ - punctuation.section.embedded.begin.vascula
+     "max": 8, "on": true
+##          ^ constant.numeric.json
+##                   ^^^^ constant.language.json
+   }
+## ^ source.json
+   {%- endschema -%}
+## ^^^ punctuation.section.embedded.begin.vascula
+##     ^^^^^^^^^ keyword.other.schema.vascula
+   <p>{{ after }}</p>
+##    ^^ punctuation.section.embedded.begin.vascula
+##       ^^^^^ - source.json

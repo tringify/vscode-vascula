@@ -1,0 +1,84 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { join } from "node:path";
+import { core, readJson, read, root } from "./helpers.mjs";
+
+const { regions, ctx, filters } = core;
+const contract = readJson(join(root, "data/contract.json"));
+
+test("filters: all Vascula built-ins and Tringify platform filters, each documented", () => {
+  const builtins = filters.filters.filter((f) => f.source === "vascula").map((f) => f.name);
+  const platformFilters = filters.filters.filter((f) => f.source === "tringify").map((f) => f.name);
+  // Exactly the contract's filters: Vascula's built-ins and the storefront's. A storefront
+  // filter with a built-in's name (`date`) replaces it, so it is documented as the storefront's;
+  // scripts/generate.mjs --check enforces the same.
+  const storefront = contract.filters.storefront;
+  assert.deepEqual([...builtins].sort(), contract.filters.vascula.filter((f) => !storefront.includes(f)).sort());
+  assert.deepEqual([...platformFilters].sort(), [...storefront].sort());
+  assert.equal(filters.filter("date").source, "tringify");
+  for (const f of ["format_number", "money_split", "money", "t"]) assert.ok(platformFilters.includes(f), f);
+  assert.equal(new Set(builtins.concat(platformFilters)).size, builtins.length + platformFilters.length);
+  for (const f of filters.filters) assert.ok(f.doc && f.example && f.signature.startsWith(f.name), f.name);
+  assert.match(filters.filterMarkdown(filters.filter("money")), /platform-filters#money/);
+  assert.match(filters.filterMarkdown(filters.filter("sort_natural")), /vascula\.dev\/filters#sort-natural/);
+});
+
+test("ctx: roots and fields come from the theme author contract", () => {
+  assert.deepEqual(ctx.roots.map((r) => r.name), contract.ctx_needs);
+  assert.ok(ctx.fieldsAt(["cart"]).some((f) => f.name === "item_count"));
+  const price = ctx.fieldsAt(["product", "price"]).map((f) => f.name);
+  assert.ok(price.includes("current"), price.join());
+  assert.ok(ctx.fieldsAt(["products", "items"]).some((f) => f.name === "first"));
+  assert.ok(ctx.fieldsAt(["products", "items", "[]"]).some((f) => f.name === "title"));
+  assert.deepEqual(ctx.fieldsAt(["nope"]), []);
+});
+
+test("snippets and section schema offer exactly the contract's setting types", () => {
+  const snippets = readJson(join(root, "snippets/vascula.code-snippets"));
+  const choice = /\$\{2\|([^|]+)\|\}/.exec(snippets.Setting.body)[1].split(",");
+  assert.deepEqual([...choice].sort(), [...contract.setting_types].sort());
+  // Completion offers every type; uploads reject other types on settings with an editor block.
+  const schema = readJson(join(root, "schemas/section.schema.json"));
+  assert.deepEqual(schema.definitions.setting.properties.type.defaultSnippets.map((s) => s.body), contract.setting_types);
+  const editable = schema.definitions.setting.allOf.find((r) => r.if?.required?.[0] === "editor").then.allOf[0];
+  assert.deepEqual(editable.properties.type.enum, contract.setting_types);
+  const advisory = readJson(join(root, "schemas/section.advisory.schema.json"));
+  assert.deepEqual(advisory.definitions.setting.properties.type.enum, contract.setting_types);
+  const settingsSchema = readJson(join(root, "schemas/settings-schema.schema.json"));
+  assert.deepEqual(settingsSchema.definitions.setting.properties.type.enum, contract.theme_setting_types);
+  const forms = /form '\$\{1\|([^|]+)\|\}'/.exec(snippets.form.body[0])[1].split(",");
+  const kinds = new Set(contract.hosted_actions.filter((a) => a.form_capable).map((a) => a.kind));
+  for (const k of forms) assert.ok(kinds.has(k), k);
+});
+
+test("regions: markup, filters, paths and schema blocks", () => {
+  const text = '<p>{{ product.price | mo }}</p>{% if x %}{% for p in cart.items %}{{ p.title }}{% endfor %}{% form "cart_';
+  const m1 = regions.markupAt(text, text.indexOf(" mo") + 3);
+  assert.equal(m1.kind, "output");
+  assert.equal(regions.filterPrefix(m1), "mo");
+  const m2 = regions.markupAt(text, text.length);
+  assert.equal(regions.formKindPrefix(m2), "cart_");
+  assert.equal(regions.markupAt(text, text.indexOf("</p>") + 1), undefined, "between markup is text");
+  const p = regions.markupAt("{{ product.price.", 17);
+  assert.deepEqual(regions.pathBeforeCursor(p), { path: ["product", "price"], partial: "" });
+  const q = regions.markupAt("{{ product.images[0].al", 23);
+  assert.deepEqual(regions.pathBeforeCursor(q), { path: ["product", "images", "[]"], partial: "al" });
+  assert.equal(regions.tagNamePrefix(regions.markupAt("{%- unl", 7)), "unl");
+  assert.equal(regions.markupAt('{{ "}}" | ', 10).kind, "output", "a closer inside a string does not end the markup");
+  assert.equal(regions.markupAt("{# {{ x #}", 7), undefined, "comments are not markup");
+
+  const sec = '<p></p>\n{%- schema -%}\n{"name":"a"}\n{%- endschema -%}\n';
+  const [b] = regions.findSchemaBlocks(sec);
+  assert.equal(sec.slice(b.contentStart, b.contentEnd).trim(), '{"name":"a"}');
+  const v = regions.virtualJson(sec, b);
+  assert.equal(v.length, sec.length);
+  assert.equal(v.trim(), '{"name":"a"}');
+  assert.equal(regions.markupAt(sec, sec.indexOf("name")), undefined, "the schema is not markup");
+});
+
+test("grammar declares every keyword the docs list", () => {
+  const grammar = read(join(root, "syntaxes/vascula.tmLanguage.json"));
+  for (const k of ["if", "elsif", "else", "endif", "unless", "case", "when", "for", "break", "continue", "cycle", "assign", "capture", "render", "form", "comment", "blocks", "schema"]) {
+    assert.ok(new RegExp(`[(|]${k}[|)]`).test(grammar), k);
+  }
+});

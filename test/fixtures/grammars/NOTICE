@@ -1,0 +1,9 @@
+These grammars are copied unchanged from Visual Studio Code 1.105.1
+(https://github.com/microsoft/vscode, extensions/{html,css,javascript,json}/syntaxes)
+so the grammar tests tokenize embedded HTML, CSS, JavaScript and JSON the way the
+editor does. Each file names its upstream source in its "version" field.
+
+Visual Studio Code is Copyright (c) Microsoft Corporation, licensed under the MIT
+License. The upstream grammars carry their own MIT-licensed origins
+(textmate/html.tmbundle, microsoft/vscode-css, microsoft/TypeScript-TmLanguage,
+microsoft/vscode-JSON.tmLanguage).
