@@ -9,11 +9,13 @@ const contract = readJson(join(root, "data/contract.json"));
 test("filters: all Vascula built-ins and Tringify platform filters, each documented", () => {
   const builtins = filters.filters.filter((f) => f.source === "vascula").map((f) => f.name);
   const platformFilters = filters.filters.filter((f) => f.source === "tringify").map((f) => f.name);
-  // Exactly the contract's filters: Vascula's built-ins, and the storefront's (which also
-  // replaces the built-in `date`); scripts/generate.mjs --check enforces the same.
-  assert.deepEqual([...builtins].sort(), [...contract.filters.vascula].sort());
-  for (const f of platformFilters) assert.ok(contract.filters.storefront.includes(f), f);
-  for (const f of contract.filters.storefront) assert.ok(builtins.includes(f) || platformFilters.includes(f), f);
+  // Exactly the contract's filters: Vascula's built-ins and the storefront's. A storefront
+  // filter with a built-in's name (`date`) replaces it, so it is documented as the storefront's;
+  // scripts/generate.mjs --check enforces the same.
+  const storefront = contract.filters.storefront;
+  assert.deepEqual([...builtins].sort(), contract.filters.vascula.filter((f) => !storefront.includes(f)).sort());
+  assert.deepEqual([...platformFilters].sort(), [...storefront].sort());
+  assert.equal(filters.filter("date").source, "tringify");
   for (const f of ["format_number", "money_split", "money", "t"]) assert.ok(platformFilters.includes(f), f);
   assert.equal(new Set(builtins.concat(platformFilters)).size, builtins.length + platformFilters.length);
   for (const f of filters.filters) assert.ok(f.doc && f.example && f.signature.startsWith(f.name), f.name);

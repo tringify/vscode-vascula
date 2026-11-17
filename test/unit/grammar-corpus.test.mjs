@@ -59,7 +59,7 @@ test("every Canvas .vasc file tokenizes fully", async () => {
   const grammar = await loadGrammar();
   const vasc = [...files(join(canvasDir, "sections"), ".vasc"), ...files(join(canvasDir, "blocks"), ".vasc")];
   assert.ok(vasc.length >= 40);
-  // Section sources edited before `tringify-theme build`: markup only, no schema block.
+  // Section sources compiled by `tringify theme build`: markup only, no schema block.
   const bodies = files(join(canvasDir, "src/sections"), "body.html");
   assert.ok(bodies.length >= 30);
   vasc.push(...bodies);

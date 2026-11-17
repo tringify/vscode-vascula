@@ -91,7 +91,7 @@ interface BlocksDecl {
 // The platform's metafield block goes wherever theme or app blocks do.
 const METAFIELD_BLOCK = "metafield";
 
-/** Whether the blocks slot takes theme:<name> instances (vascula BlockSchema.AcceptsThemeBlock). */
+/** Whether the section's blocks accept theme:<name> instances. */
 function acceptsThemeBlock(b: BlocksDecl | undefined, type: string): boolean {
   if (!b || !type.startsWith("theme:")) return false;
   const name = type.slice("theme:".length);
@@ -151,7 +151,7 @@ export async function validate(uri: string, text: string, options: Options): Pro
   const imageIds = (settings: unknown) =>
     new Set(Array.isArray(settings) ? (settings as Setting[]).filter((s) => s && s.type === "image" && typeof s.id === "string").map((s) => s.id as string) : []);
 
-  // The checks vascula's validateSectionSchema runs on settings with an editor block.
+  // The checks an upload runs on settings with an editor block.
   // parent: the section's settings, when these belong to a block type.
   const checkEditable = (settings: unknown, where: string, parent?: unknown) => {
     if (!Array.isArray(settings)) return;
